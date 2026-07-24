@@ -29,9 +29,18 @@ import Profile from './pages/user/Profile'
 import Contact from './pages/user/Contact'
 import Policy from './pages/user/Policy'
 
+// Admin Pages (Giai đoạn 14)
+import Dashboard from './pages/admin/Dashboard'
+import AdminProducts from './pages/admin/Products'
+import AdminCategories from './pages/admin/Categories'
+import AdminOrders from './pages/admin/Orders'
+import AdminUsers from './pages/admin/Users'
+
 // Layouts & Guards
 import UserLayout from './layouts/UserLayout'
+import AdminLayout from './layouts/AdminLayout'
 import UserRoute from './routes/UserRoute'
+import AdminRoute from './routes/AdminRoute'
 
 export default function App() {
     return (
@@ -51,7 +60,7 @@ export default function App() {
 
                                     {/* --- PUBLIC & PROTECTED USER ROUTES --- */}
                                     <Route element={<UserLayout />}>
-                                        {/* Public Routes (Giai đoạn 11 & 13) */}
+                                        {/* Public Routes */}
                                         <Route path='/' element={<Home />} />
                                         <Route path='/products' element={<Products />} />
                                         <Route path='/products/:id' element={<ProductDetail />} />
@@ -69,12 +78,18 @@ export default function App() {
                                         </Route>
                                     </Route>
 
-                                    {/* 
-                    LƯU Ý: Các Route trang Quản trị Admin... 
-                    sẽ được hoàn thiện ở Giai đoạn 14.
-                  */}
+                                    {/* --- PROTECTED ADMIN ROUTES (Giai đoạn 14 - Yêu cầu quyền Admin) --- */}
+                                    <Route element={<AdminRoute />}>
+                                        <Route element={<AdminLayout />}>
+                                            <Route path='/admin' element={<Dashboard />} />
+                                            <Route path='/admin/products' element={<AdminProducts />} />
+                                            <Route path='/admin/categories' element={<AdminCategories />} />
+                                            <Route path='/admin/orders' element={<AdminOrders />} />
+                                            <Route path='/admin/users' element={<AdminUsers />} />
+                                        </Route>
+                                    </Route>
 
-                                    {/* Chuyển hướng các route chưa khởi tạo về trang chủ */}
+                                    {/* Chuyển hướng các route không tồn tại về trang chủ */}
                                     <Route path='*' element={<Navigate to='/' replace />} />
                                 </Routes>
 
