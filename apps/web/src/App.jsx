@@ -22,6 +22,13 @@ import ProductDetail from './pages/user/ProductDetail'
 import Cart from './pages/user/Cart'
 import Checkout from './pages/user/Checkout'
 
+// Additional User Pages & Info Pages (Giai đoạn 13)
+import Orders from './pages/user/Orders'
+import OrderDetail from './pages/user/OrderDetail'
+import Profile from './pages/user/Profile'
+import Contact from './pages/user/Contact'
+import Policy from './pages/user/Policy'
+
 // Layouts & Guards
 import UserLayout from './layouts/UserLayout'
 import UserRoute from './routes/UserRoute'
@@ -44,22 +51,27 @@ export default function App() {
 
                                     {/* --- PUBLIC & PROTECTED USER ROUTES --- */}
                                     <Route element={<UserLayout />}>
-                                        {/* Public Routes (Giai đoạn 11) */}
+                                        {/* Public Routes (Giai đoạn 11 & 13) */}
                                         <Route path='/' element={<Home />} />
                                         <Route path='/products' element={<Products />} />
                                         <Route path='/products/:id' element={<ProductDetail />} />
                                         <Route path='/product/:id' element={<ProductDetail />} />
+                                        <Route path='/contact' element={<Contact />} />
+                                        <Route path='/policy' element={<Policy />} />
 
-                                        {/* Protected User Routes (Giai đoạn 12 - Yêu cầu đăng nhập) */}
+                                        {/* Protected User Routes (Yêu cầu đăng nhập) */}
                                         <Route element={<UserRoute />}>
                                             <Route path='/cart' element={<Cart />} />
                                             <Route path='/checkout' element={<Checkout />} />
+                                            <Route path='/orders' element={<Orders />} />
+                                            <Route path='/orders/:id' element={<OrderDetail />} />
+                                            <Route path='/profile' element={<Profile />} />
                                         </Route>
                                     </Route>
 
                                     {/* 
-                    LƯU Ý: Các Route Profile, Đơn hàng, Admin... 
-                    sẽ lần lượt được thêm ở Giai đoạn 13 & 14.
+                    LƯU Ý: Các Route trang Quản trị Admin... 
+                    sẽ được hoàn thiện ở Giai đoạn 14.
                   */}
 
                                     {/* Chuyển hướng các route chưa khởi tạo về trang chủ */}
