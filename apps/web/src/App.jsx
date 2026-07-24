@@ -9,25 +9,17 @@ import { CompareProvider } from './context/CompareContext'
 import { ToastProvider } from './context/ToastContext'
 import ToastContainer from './components/user/ToastContainer'
 
+// Auth Pages (Giai đoạn 10)
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
+
+// User Public Pages (Giai đoạn 11)
+import Home from './pages/user/Home'
+import Products from './pages/user/Products'
+import ProductDetail from './pages/user/ProductDetail'
+
 // Layouts
 import UserLayout from './layouts/UserLayout'
-import AdminLayout from './layouts/AdminLayout'
-
-// Route Guards (chuẩn bị sẵn cho các giai đoạn sau)
-import UserRoute from './routes/UserRoute'
-import AdminRoute from './routes/AdminRoute'
-
-// Component Placeholder tạm thời cho Giai đoạn 9
-const HomePlaceholder = () => (
-    <div style={{ padding: '4rem 2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#1e293b' }}>
-            🚀 Welcome to NovaPhone
-        </h1>
-        <p style={{ color: '#64748b', lineHeight: '1.6' }}>
-            Hệ thống Frontend đang trong quá trình phát triển (<strong>Giai đoạn 9</strong>: Khởi tạo Vite, Layout, Context & Routing).
-        </p>
-    </div>
-)
 
 export default function App() {
     return (
@@ -41,17 +33,24 @@ export default function App() {
                                 <ToastContainer />
 
                                 <Routes>
-                                    {/* --- PUBLIC ROUTES (User Layout) --- */}
+                                    {/* --- AUTH ROUTES --- */}
+                                    <Route path='/login' element={<Login />} />
+                                    <Route path='/register' element={<Register />} />
+
+                                    {/* --- PUBLIC USER ROUTES --- */}
                                     <Route element={<UserLayout />}>
-                                        <Route path='/' element={<HomePlaceholder />} />
+                                        <Route path='/' element={<Home />} />
+                                        <Route path='/products' element={<Products />} />
+                                        <Route path='/products/:id' element={<ProductDetail />} />
+                                        <Route path='/product/:id' element={<ProductDetail />} />
                                     </Route>
 
                                     {/* 
-                    LƯU Ý: Các Route đăng nhập, sản phẩm, giỏ hàng, đơn hàng, admin... 
-                    sẽ lần lượt được import và mở ngoặc ở các Giai đoạn 10 -> 14.
+                    LƯU Ý: Các Route Giỏ hàng, Checkout, Profile, Đơn hàng, Admin... 
+                    sẽ lần lượt được thêm ở các Giai đoạn 12 -> 14.
                   */}
 
-                                    {/* Chuyển hướng các route chưa tồn tại về trang chủ */}
+                                    {/* Chuyển hướng các route chưa khởi tạo về trang chủ */}
                                     <Route path='*' element={<Navigate to='/' replace />} />
                                 </Routes>
 
