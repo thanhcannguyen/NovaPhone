@@ -227,10 +227,10 @@ export default function ProductDetail() {
 
             /* Breadcrumb */
             .pd-breadcrumb { background:#fff; border-bottom:1px solid #E5E7EB; padding:10px 0; font-size:0.82rem; color:#6B7280; }
-            .pd-breadcrumb-inner { max-width:1320px; margin:0 auto; padding:0 24px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+            .pd-breadcrumb-inner { max-width:1280px; margin:0 auto; padding:0 24px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 
             /* Wrap */
-            .pd-wrap { max-width:1320px; margin:0 auto; padding:24px; position:relative; }
+            .pd-wrap { max-width:1280px; margin:0 auto; padding:24px; position:relative; }
 
             /* Toast */
             .pd-toast { position:fixed; top:20px; right:20px; background:#0A0A0A; color:#fff; padding:10px 18px; border-radius:10px; font-size:0.85rem; font-weight:600; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.18); }
@@ -383,11 +383,16 @@ export default function ProductDetail() {
             {/* Breadcrumb */}
             <div className="pd-breadcrumb pd-page">
                 <div className="pd-breadcrumb-inner">
+                    <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>Trang chủ</button>
+                    <ChevronRight size={12} style={{ ...IS, color: '#9CA3AF' }} />
                     <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>Sản phẩm</button>
                     {brand && (
                         <>
                             <ChevronRight size={12} style={{ ...IS, color: '#9CA3AF' }} />
-                            <button onClick={() => navigate(`/products?search=${encodeURIComponent(brand)}`)}
+                            <button onClick={() => {
+                                const catId = p.category?._id || p.category
+                                navigate(catId ? `/products?category=${catId}` : '/products')
+                            }}
                                 style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>
                                 {brand}
                             </button>
