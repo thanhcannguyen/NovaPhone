@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, Heart, GitCompareArrows } from 'lucide-react'
-import { useCart } from '../../context/CartContext'
 import { useWishlist } from '../../context/WishlistContext'
 import { useCompare } from '../../context/CompareContext'
 import { useToast } from '../../context/ToastContext'
@@ -9,26 +8,17 @@ import QuickViewModal from './QuickViewModal'
 
 export default function ProductCard({ product }) {
     const navigate = useNavigate()
-    const { addToCart } = useCart()
     const { isInWishlist, toggleWishlist } = useWishlist()
     const { isInCompare, toggleCompare } = useCompare()
     const { showToast } = useToast()
 
     const [hovered, setHovered] = useState(false)
-    const [adding, setAdding] = useState(false)
     const [quickViewOpen, setQuickViewOpen] = useState(false)
 
     const hasDiscount = product.originalPrice > product.price
     const pct = hasDiscount ? Math.round((1 - product.price / product.originalPrice) * 100) : 0
     const inWishlist = isInWishlist(product._id)
     const inCompare = isInCompare(product._id)
-
-    const handleAddToCart = async (e) => {
-        e.stopPropagation()
-        setAdding(true)
-        await addToCart(product._id, 1)
-        setAdding(false)
-    }
 
     const handleWishlist = (e) => {
         e.stopPropagation()
@@ -76,10 +66,11 @@ export default function ProductCard({ product }) {
                     .ps-pcard-img-wrap { width: 100%; aspect-ratio: 1; background: #F8F9FB; position: relative; overflow: hidden; }
                     .ps-pcard-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
                     .ps-pcard-actions {
-                        position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px;
-                        opacity: 0; transform: translateX(8px); transition: all 0.2s;
+                        position: absolute; top: 55%; right: 10px; transform: translateY(-50%) translateX(8px);
+                        display: flex; flex-direction: column; gap: 8px;
+                        opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none;
                     }
-                    .ps-pcard:hover .ps-pcard-actions { opacity: 1; transform: translateX(0); }
+                    .ps-pcard:hover .ps-pcard-actions { opacity: 1; transform: translateY(-50%) translateX(0); pointer-events: auto; }
                     .ps-pcard-action-btn {
                         width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1px solid #E5E7EB;
                         display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -88,13 +79,20 @@ export default function ProductCard({ product }) {
                     .ps-pcard-action-btn:hover { background: #0057FF; border-color: #0057FF; color: #fff; }
                     .ps-pcard-action-btn.active { background: #FEE2E2; border-color: #EF4444; color: #EF4444; }
                     .ps-pcard-action-btn.active.compare-active { background: #EEF4FF; border-color: #0057FF; color: #0057FF; }
+                    /* Tooltip tuỳ chỉnh — hiện gần như ngay lập tức khi hover, không dùng title mặc định của trình duyệt (vốn có độ trễ vài giây) */
+                    .ps-pcard-tooltip {
+                        position: absolute; right: 40px; top: 50%; transform: translateY(-50%) translateX(4px);
+                        background: #0A0A0A; color: #fff; font-size: 0.7rem; font-weight: 600; padding: 5px 10px;
+                        border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none;
+                        transition: opacity 0.1s ease, transform 0.1s ease; z-index: 4;
+                    }
+                    .ps-pcard-action-btn:hover .ps-pcard-tooltip { opacity: 1; transform: translateY(-50%) translateX(0); }
                     .ps-pcard-body { padding: 12px; display: flex; flex-direction: column; flex: 1; }
                     .ps-pcard-brand { font-size: 0.65rem; font-weight: 700; color: #0057FF; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
                     .ps-pcard-name { font-weight: 700; font-size: 0.875rem; color: #0A0A0A; margin: 0 0 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em; flex: 1; }
                     .ps-pcard-price-row { margin-bottom: 10px; }
                     .ps-pcard-price { font-weight: 800; font-size: 1rem; color: #EF4444; display: block; }
                     .ps-pcard-price-old { font-size: 0.78rem; color: #9CA3AF; text-decoration: line-through; }
-                    .ps-pcard-btn { width: 100%; border: none; border-radius: 8px; padding: 9px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.2s; font-family: 'Nunito', sans-serif; }
                 `}</style>
 
                 {hasDiscount && <span className="ps-pcard-badge">Giảm {pct}%</span>}
@@ -109,14 +107,17 @@ export default function ProductCard({ product }) {
                         onError={e => { e.target.src = 'https://placehold.co/300x300/F8F9FB/0057FF?text=📱' }}
                     />
                     <div className="ps-pcard-actions">
-                        <div className="ps-pcard-action-btn" title="Xem nhanh" onClick={e => { e.stopPropagation(); setQuickViewOpen(true) }}>
+                        <div className="ps-pcard-action-btn" onClick={e => { e.stopPropagation(); setQuickViewOpen(true) }}>
                             <Eye size={15} />
+                            <span className="ps-pcard-tooltip">Xem nhanh</span>
                         </div>
-                        <div className={`ps-pcard-action-btn${inWishlist ? ' active' : ''}`} title={inWishlist ? 'Bỏ yêu thích' : 'Yêu thích'} onClick={handleWishlist}>
+                        <div className={`ps-pcard-action-btn${inWishlist ? ' active' : ''}`} onClick={handleWishlist}>
                             <Heart size={15} fill={inWishlist ? '#EF4444' : 'none'} />
+                            <span className="ps-pcard-tooltip">{inWishlist ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}</span>
                         </div>
-                        <div className={`ps-pcard-action-btn${inCompare ? ' active compare-active' : ''}`} title={inCompare ? 'Bỏ so sánh' : 'So sánh'} onClick={handleCompare}>
+                        <div className={`ps-pcard-action-btn${inCompare ? ' active compare-active' : ''}`} onClick={handleCompare}>
                             <GitCompareArrows size={15} />
+                            <span className="ps-pcard-tooltip">{inCompare ? 'Bỏ so sánh' : 'Thêm vào so sánh'}</span>
                         </div>
                     </div>
                 </div>
@@ -130,19 +131,6 @@ export default function ProductCard({ product }) {
                         <span className="ps-pcard-price">{product.price.toLocaleString('vi-VN')}đ</span>
                         {hasDiscount && <span className="ps-pcard-price-old">{product.originalPrice.toLocaleString('vi-VN')}đ</span>}
                     </div>
-                    <button
-                        className="ps-pcard-btn"
-                        style={{
-                            background: product.stock === 0 ? '#F3F4F6' : adding ? '#0040CC' : '#0057FF',
-                            color: product.stock === 0 ? '#9CA3AF' : '#fff',
-                            border: product.stock === 0 ? '1.5px solid #E5E7EB' : 'none',
-                            cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
-                        }}
-                        onClick={handleAddToCart}
-                        disabled={adding || product.stock === 0}
-                    >
-                        {adding ? '✓ Đã thêm' : product.stock === 0 ? '⊗ Hết hàng' : '🛒 Thêm vào giỏ'}
-                    </button>
                 </div>
             </div>
 
