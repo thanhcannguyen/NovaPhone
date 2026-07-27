@@ -11,8 +11,8 @@ import {
 
 // Style reset dùng chung cho tất cả Lucide icons
 const IS = { display: 'block', border: 'none', outline: 'none', background: 'none', boxShadow: 'none', flexShrink: 0 }
-// Icon nhỏ trong label/info (có màu nhạt hơn)
-const ISm = { ...IS, color: '#9CA3AF' }
+// Icon nhỏ trong label/info (đổi sang màu xanh dương đồng bộ)
+const ISm = { ...IS, color: '#0057FF' }
 
 export default function Profile() {
     const { user, login, logout } = useAuth()
@@ -21,12 +21,22 @@ export default function Profile() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState('')
     const [error, setError] = useState('')
+    const [avatarPreview, setAvatarPreview] = useState(null)
     const [form, setForm] = useState({
         name: user?.name || '', phone: user?.phone || '',
         street: user?.address?.street || '',
         district: user?.address?.district || '',
         city: user?.address?.city || '',
     })
+
+    // Xem trước ảnh đại diện tạm thời (F5 sẽ mất do chưa có API lưu backend)
+    const handleAvatarChange = (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) return setError('Vui lòng chọn file ảnh')
+        const url = URL.createObjectURL(file)
+        setAvatarPreview(url)
+    }
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
@@ -70,26 +80,42 @@ export default function Profile() {
                     background: transparent !important;
                     overflow: visible !important;
                 }
-                .profile-wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
+                
+                /* 1. Đồng bộ chiều rộng 1280px */
+                .profile-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
                 .profile-sidebar { position: sticky; top: 80px; }
-                .profile-card { background: linear-gradient(145deg, #0A0A0A, #0d1b3e); border-radius: 16px; padding: 24px; color: #fff; text-align: center; margin-bottom: 14px; position: relative; overflow: hidden; }
-                .profile-card::before { content: ''; position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, rgba(0,87,255,0.25) 0%, transparent 70%); top: -60px; right: -60px; }
-                .profile-avatar { width: 72px; height: 72px; background: rgba(0,87,255,0.3); border: 3px solid rgba(0,87,255,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; color: #60A5FA; margin: 0 auto 12px; position: relative; z-index: 1; }
+                
+                /* 2. Card avatar sang trọng + Upload avatar */
+                .profile-card { background: linear-gradient(150deg, #0A0A0A 0%, #0d1b3e 65%, #12234f 100%); border-radius: 18px; padding: 28px 24px; color: #fff; text-align: center; margin-bottom: 14px; position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(10,10,10,0.18); }
+                .profile-card::before { content: ''; position: absolute; width: 220px; height: 220px; background: radial-gradient(circle, rgba(0,87,255,0.3) 0%, transparent 70%); top: -70px; right: -70px; }
+                .profile-card::after { content: ''; position: absolute; width: 140px; height: 140px; background: radial-gradient(circle, rgba(96,165,250,0.15) 0%, transparent 70%); bottom: -50px; left: -40px; }
+                
+                .profile-avatar-wrap { position: relative; width: 76px; height: 76px; margin: 0 auto 14px; z-index: 1; }
+                .profile-avatar { width: 76px; height: 76px; background: linear-gradient(145deg, #0057FF, #0040CC); border: 3px solid rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.85rem; font-weight: 800; color: #fff; overflow: hidden; box-shadow: 0 6px 18px rgba(0,87,255,0.4); }
+                .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+                .avatar-upload-btn { position: absolute; bottom: -2px; right: -2px; width: 26px; height: 26px; background: #fff; border: 2px solid #0A0A0A; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #0A0A0A; transition: all 0.15s; }
+                .avatar-upload-btn:hover { background: #0057FF; border-color: #0057FF; color: #fff; }
+                
                 .profile-name { font-weight: 800; font-size: 1rem; margin-bottom: 4px; position: relative; z-index: 1; }
                 .profile-email { font-size: 0.75rem; color: rgba(255,255,255,0.5); position: relative; z-index: 1; word-break: break-all; }
-                .profile-nav { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; overflow: hidden; }
-                .profile-nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #6B7280; text-decoration: none; font-size: 0.875rem; font-weight: 600; border-left: 3px solid transparent; border-bottom: 1px solid #E5E7EB; transition: all 0.2s; cursor: pointer; background: none; width: 100%; font-family: 'Nunito',sans-serif; }
+                
+                /* 3. Menu điều hướng (đã fix viền đứt đoạn) */
+                .profile-nav { background: #fff; border: 1.5px solid #0A0A0A; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(10,10,10,0.04); }
+                .profile-nav-item { display: flex; align-items: center; gap: 11px; padding: 13px 16px; color: #6B7280; text-decoration: none; font-size: 0.875rem; font-weight: 600; border-left: 3px solid transparent; border-bottom: 1px solid #F1F3F5; transition: all 0.18s; cursor: pointer; background: none; width: 100%; font-family: 'Nunito',sans-serif; }
+                .profile-nav-item:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
                 .profile-nav-item:last-child { border-bottom: none; }
-                .profile-nav-item:hover { background: #F8F9FB; color: #0057FF; }
+                .profile-nav-item:hover { background: #F8F9FB; color: #0057FF; padding-left: 20px; }
                 .profile-nav-item:hover .nav-icon { color: #0057FF; }
-                .profile-nav-item.active { color: #0057FF; background: #EEF4FF; border-left-color: #0057FF; }
+                .profile-nav-item.active { color: #0057FF; background: #EEF4FF; border-left-color: #0057FF; font-weight: 800; }
                 .profile-nav-item.active .nav-icon { color: #0057FF; }
-                .nav-icon { display: flex; align-items: center; flex-shrink: 0; color: #9CA3AF; transition: color 0.2s; }
-                .profile-nav-logout { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #EF4444; font-size: 0.875rem; font-weight: 600; border-left: 3px solid transparent; cursor: pointer; background: none; width: 100%; font-family: 'Nunito',sans-serif; transition: all 0.2s; }
-                .profile-nav-logout:hover { background: #FEF2F2; border-left-color: #EF4444; }
+                .nav-icon { display: flex; align-items: center; flex-shrink: 0; color: #9CA3AF; transition: color 0.18s; }
+                .profile-nav-logout { display: flex; align-items: center; gap: 11px; padding: 13px 16px; color: #EF4444; font-size: 0.875rem; font-weight: 600; border-left: 3px solid transparent; cursor: pointer; background: none; width: 100%; font-family: 'Nunito',sans-serif; transition: all 0.18s; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+                .profile-nav-logout:hover { background: #FEF2F2; border-left-color: #EF4444; padding-left: 20px; }
                 .logout-icon { display: flex; align-items: center; flex-shrink: 0; }
-                .form-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
-                .form-card-header { padding: 16px 24px; border-bottom: 1px solid #E5E7EB; }
+                
+                /* 4. Card nội dung bên phải */
+                .form-card { background: #fff; border: 1px solid #D1D5DB; border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(10,10,10,0.04); }
+                .form-card-header { padding: 16px 24px; border-bottom: 1px solid #E5E7EB; background: #FAFAFA; }
                 .form-card-title { font-weight: 800; font-size: 0.95rem; color: #0A0A0A; display: flex; align-items: center; gap: 8px; }
                 .form-card-title::before { content: ''; display: inline-block; width: 4px; height: 16px; background: #0057FF; border-radius: 2px; flex-shrink: 0; }
                 .form-card-body { padding: 24px; }
@@ -107,14 +133,19 @@ export default function Profile() {
                 .btn-cancel:hover { border-color: #EF4444; color: #EF4444; }
                 .btn-edit { padding: 6px 14px; border-radius: 8px; border: 1px solid #E5E7EB; background: #F8F9FB; color: #0057FF; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Nunito',sans-serif; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s; }
                 .btn-edit:hover { background: #EEF4FF; border-color: #0057FF; }
-                .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F9FAFB; gap: 8px; flex-wrap: wrap; }
+                
+                /* Info Row & Icon Box */
+                .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F1F3F5; gap: 8px; flex-wrap: wrap; }
                 .info-row:last-child { border-bottom: none; }
-                .info-label { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: #6B7280; }
+                .info-label { display: flex; align-items: center; gap: 10px; font-size: 0.82rem; color: #6B7280; }
+                .info-icon-box { width: 30px; height: 30px; border-radius: 9px; background: #EEF4FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
                 .info-value { font-size: 0.875rem; font-weight: 600; color: #0A0A0A; text-align: right; word-break: break-word; }
+                
                 .alert-ok { background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; border-radius: 10px; padding: 11px 16px; font-size: 0.875rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
                 .alert-err { background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; border-radius: 10px; padding: 11px 16px; font-size: 0.875rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
                 .breadcrumb-bar { background: #fff; border-bottom: 1px solid #E5E7EB; padding: 10px 0; font-size: 0.82rem; color: #6B7280; }
-                .breadcrumb-inner { max-width: 900px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 6px; }
+                .breadcrumb-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 6px; }
+                
                 @media (max-width: 700px) {
                     .profile-wrap { grid-template-columns: 1fr; padding: 16px; }
                     .profile-sidebar { position: static; }
@@ -122,12 +153,12 @@ export default function Profile() {
                 }
             `}</style>
 
-            {/* Breadcrumb */}
+            {/* Breadcrumb - Đã cập nhật link Trang chủ */}
             <div className="breadcrumb-bar profile-page">
                 <div className="breadcrumb-inner">
-                    <button onClick={() => navigate('/products')}
-                        style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito,sans-serif', fontSize: '0.82rem', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Smartphone size={13} style={IS} /> Trang chủ
+                    <button onClick={() => navigate('/')}
+                        style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito,sans-serif', fontSize: '0.82rem', padding: 0 }}>
+                        Trang chủ
                     </button>
                     <span style={{ fontSize: '0.7rem' }}>›</span>
                     <strong style={{ color: '#0A0A0A' }}>Cài đặt tài khoản</strong>
@@ -138,7 +169,15 @@ export default function Profile() {
                 {/* Sidebar */}
                 <div className="profile-sidebar">
                     <div className="profile-card">
-                        <div className="profile-avatar">{initials}</div>
+                        <div className="profile-avatar-wrap">
+                            <div className="profile-avatar">
+                                {avatarPreview ? <img src={avatarPreview} alt="Avatar" /> : initials}
+                            </div>
+                            <label className="avatar-upload-btn">
+                                <Pencil size={12} style={IS} />
+                                <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
+                            </label>
+                        </div>
                         <div className="profile-name">{user?.name}</div>
                         <div className="profile-email">{user?.email}</div>
                     </div>
@@ -236,7 +275,7 @@ export default function Profile() {
                                         { icon: <MapPin size={14} style={ISm} />, label: 'Tỉnh / TP', value: user?.address?.city || <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>Chưa cập nhật</span> },
                                     ].map(row => (
                                         <div key={row.label} className="info-row">
-                                            <span className="info-label">{row.icon} {row.label}</span>
+                                            <span className="info-label"><span className="info-icon-box">{row.icon}</span> {row.label}</span>
                                             <span className="info-value">{row.value}</span>
                                         </div>
                                     ))}
@@ -252,11 +291,11 @@ export default function Profile() {
                         </div>
                         <div className="form-card-body">
                             <div className="info-row">
-                                <span className="info-label"><ShieldCheck size={14} style={ISm} /> Mật khẩu</span>
+                                <span className="info-label"><span className="info-icon-box"><ShieldCheck size={14} style={{ ...IS, color: '#0057FF' }} /></span> Mật khẩu</span>
                                 <span className="info-value">••••••••</span>
                             </div>
                             <div className="info-row">
-                                <span className="info-label"><Mail size={14} style={ISm} /> Xác minh email</span>
+                                <span className="info-label"><span className="info-icon-box"><Mail size={14} style={{ ...IS, color: '#0057FF' }} /></span> Xác minh email</span>
                                 <span style={{ fontSize: '0.78rem', background: '#F0FDF4', color: '#15803D', padding: '3px 10px', borderRadius: 20, border: '1px solid #BBF7D0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
                                     <CheckCircle size={12} style={IS} /> Đã xác minh
                                 </span>
