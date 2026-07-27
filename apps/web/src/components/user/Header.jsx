@@ -50,17 +50,14 @@ export default function Header() {
         }
     }
 
-    const scrollToFilter = () => {
-        const el = document.getElementById('filter-bar')
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-
     const handleProductsClick = (e) => {
         e.preventDefault()
         if (location.pathname === '/products') {
-            scrollToFilter()
+            // Đã ở sẵn trang /products — pathname không đổi nên ScrollToTop
+            // (dựa vào useLocation trong App.jsx) sẽ không tự kích hoạt, phải tự cuộn lên đầu.
+            window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
-            navigate('/products', { state: { scrollToFilter: true } })
+            navigate('/products')
         }
     }
 

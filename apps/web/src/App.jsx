@@ -1,103 +1,75 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import ScrollToTop from './components/ScrollToTop'
 
-// Import Providers & Notification
-import { AuthProvider } from './context/AuthContext'
-import { CartProvider } from './context/CartContext'
-import { WishlistProvider } from './context/WishlistContext'
-import { CompareProvider } from './context/CompareContext'
-import { ToastProvider } from './context/ToastContext'
-import ToastContainer from './components/user/ToastContainer'
-
-// Auth Pages (Giai đoạn 10)
+// Auth
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 
-// User Public Pages (Giai đoạn 11)
+// Layouts
+import UserLayout from './layouts/UserLayout'
+import AdminLayout from './layouts/AdminLayout'
+
+// User pages
 import Home from './pages/user/Home'
 import Products from './pages/user/Products'
 import ProductDetail from './pages/user/ProductDetail'
-
-// Cart & Checkout Pages (Giai đoạn 12)
+import Profile from './pages/user/Profile'
 import Cart from './pages/user/Cart'
 import Checkout from './pages/user/Checkout'
-
-// Additional User Pages & Info Pages (Giai đoạn 13)
 import Orders from './pages/user/Orders'
 import OrderDetail from './pages/user/OrderDetail'
-import Profile from './pages/user/Profile'
-import Contact from './pages/user/Contact'
 import Policy from './pages/user/Policy'
+import Contact from './pages/user/Contact'
 
-// Admin Pages (Giai đoạn 14)
+// Admin pages
 import Dashboard from './pages/admin/Dashboard'
+import Categories from './pages/admin/Categories'
 import AdminProducts from './pages/admin/Products'
-import AdminCategories from './pages/admin/Categories'
+import Users from './pages/admin/Users'
 import AdminOrders from './pages/admin/Orders'
-import AdminUsers from './pages/admin/Users'
 
-// Layouts & Guards
-import UserLayout from './layouts/UserLayout'
-import AdminLayout from './layouts/AdminLayout'
+// Route guards
 import UserRoute from './routes/UserRoute'
 import AdminRoute from './routes/AdminRoute'
 
 export default function App() {
     return (
         <BrowserRouter>
-            <ToastProvider>
-                <AuthProvider>
-                    <CartProvider>
-                        <WishlistProvider>
-                            <CompareProvider>
-                                {/* Hiển thị thông báo Toast toàn cục */}
-                                <ToastContainer />
+            <ScrollToTop />
+            <Routes>
+                {/* Auth — public */}
+                <Route path='/login' element={<Login />} />
+                <Route path='/register' element={<Register />} />
 
-                                <Routes>
-                                    {/* --- AUTH ROUTES --- */}
-                                    <Route path='/login' element={<Login />} />
-                                    <Route path='/register' element={<Register />} />
+                {/* Public pages */}
+                <Route element={<UserLayout />}>
+                    <Route path='/' element={<Home />} />
+                    <Route path='/products' element={<Products />} />
+                    <Route path='/product/:id' element={<ProductDetail />} />
+                    <Route path="/policy" element={<Policy />} />
+                    <Route path="/contact" element={<Contact />} />
+                </Route>
 
-                                    {/* --- PUBLIC & PROTECTED USER ROUTES --- */}
-                                    <Route element={<UserLayout />}>
-                                        {/* Public Routes */}
-                                        <Route path='/' element={<Home />} />
-                                        <Route path='/products' element={<Products />} />
-                                        <Route path='/products/:id' element={<ProductDetail />} />
-                                        <Route path='/product/:id' element={<ProductDetail />} />
-                                        <Route path='/contact' element={<Contact />} />
-                                        <Route path='/policy' element={<Policy />} />
+                {/* User pages - yêu cầu đăng nhập */}
+                <Route element={<UserRoute><UserLayout /></UserRoute>}>
+                    <Route path='/profile' element={<Profile />} />
+                    <Route path='/cart' element={<Cart />} />
+                    <Route path='/checkout' element={<Checkout />} />
+                    <Route path='/orders' element={<Orders />} />
+                    <Route path='/orders/:id' element={<OrderDetail />} />
+                </Route>
 
-                                        {/* Protected User Routes (Yêu cầu đăng nhập) */}
-                                        <Route element={<UserRoute />}>
-                                            <Route path='/cart' element={<Cart />} />
-                                            <Route path='/checkout' element={<Checkout />} />
-                                            <Route path='/orders' element={<Orders />} />
-                                            <Route path='/orders/:id' element={<OrderDetail />} />
-                                            <Route path='/profile' element={<Profile />} />
-                                        </Route>
-                                    </Route>
+                {/* Admin only */}
+                <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                    <Route path='/admin' element={<Dashboard />} />
+                    <Route path='/admin/categories' element={<Categories />} />
+                    <Route path='/admin/products' element={<AdminProducts />} />
+                    <Route path='/admin/users' element={<Users />} />
+                    <Route path='/admin/orders' element={<AdminOrders />} />
+                </Route>
 
-                                    {/* --- PROTECTED ADMIN ROUTES (Giai đoạn 14 - Yêu cầu quyền Admin) --- */}
-                                    <Route element={<AdminRoute />}>
-                                        <Route element={<AdminLayout />}>
-                                            <Route path='/admin' element={<Dashboard />} />
-                                            <Route path='/admin/products' element={<AdminProducts />} />
-                                            <Route path='/admin/categories' element={<AdminCategories />} />
-                                            <Route path='/admin/orders' element={<AdminOrders />} />
-                                            <Route path='/admin/users' element={<AdminUsers />} />
-                                        </Route>
-                                    </Route>
-
-                                    {/* Chuyển hướng các route không tồn tại về trang chủ */}
-                                    <Route path='*' element={<Navigate to='/' replace />} />
-                                </Routes>
-
-                            </CompareProvider>
-                        </WishlistProvider>
-                    </CartProvider>
-                </AuthProvider>
-            </ToastProvider>
+                <Route path='*' element={<Navigate to='/products' />} />
+            </Routes>
         </BrowserRouter>
     )
 }
