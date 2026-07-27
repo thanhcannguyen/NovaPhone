@@ -1,60 +1,81 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+
+// Các trang Chính sách/Hỗ trợ chi tiết (Hướng dẫn mua hàng, Điều khoản dịch vụ...)
+// chưa được xây dựng riêng — dẫn về trang Chính sách/Liên hệ thật đã có, hoặc trang chủ nếu chưa có trang tương ứng.
+const POLICY_LINKS = [
+    { label: 'Chính sách bảo mật', to: '/policy' },
+    { label: 'Chính sách vận chuyển', to: '/policy' },
+    { label: 'Chính sách đổi trả', to: '/policy' },
+    { label: 'Quy định sử dụng', to: '/policy' },
+]
+const SUPPORT_LINKS = [
+    { label: 'Hướng dẫn mua hàng', to: '/contact' },
+    { label: 'Hướng dẫn thanh toán', to: '/contact' },
+    { label: 'Hướng dẫn giao nhận', to: '/policy' },
+    { label: 'Điều khoản dịch vụ', to: '/policy' },
+]
 
 export default function Footer() {
+    const navigate = useNavigate()
+    const location = useLocation()
+
+    // Điều hướng có xử lý trường hợp đang sẵn ở đúng trang đích rồi —
+    // đổi route sẽ không kích hoạt ScrollToTop nên phải tự cuộn lên đầu.
+    const goTo = (to) => (e) => {
+        e.preventDefault()
+        if (location.pathname === to) {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        } else {
+            navigate(to)
+        }
+    }
+
     return (
         <footer style={s.footer}>
             <div style={s.inner}>
                 <div style={s.grid}>
+
+                    {/* Cột 1: Logo + mô tả + mạng xã hội */}
                     <div>
-                        <div style={s.brand}>Phone<span style={{ color: '#0057FF' }}>Store</span></div>
-                        <p style={s.desc}>Điện thoại chính hãng, giá tốt nhất thị trường. Hàng nghìn sản phẩm từ các thương hiệu hàng đầu.</p>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            {['📘 Facebook', '📸 Instagram', '🐦 Twitter'].map(s => (
-                                <span key={s} style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', padding: '4px 10px', borderRadius: 6 }}>{s}</span>
-                            ))}
+                        <div style={s.brand}>Nova<span style={{ color: '#0057FF' }}>Phone</span></div>
+                        <p style={s.desc}>Nơi công nghệ gặp gỡ phong cách sống. NovaPhone mang đến trải nghiệm mua sắm điện thoại chính hãng, tận tâm và đáng tin cậy.</p>                    </div>
+
+                    {/* Cột 2: Thông tin liên hệ */}
+                    <div>
+                        <div style={s.heading}>Thông tin</div>
+                        <div style={s.infoRow}>
+                            <span><strong style={s.infoStrong}>Địa chỉ:</strong> KDC Ehome4, Lái Thiêu, TP.HCM</span>
+                        </div>
+                        <div style={s.infoRow}>
+                            <span><strong style={s.infoStrong}>Điện thoại:</strong> 0876 765 304</span>
+                        </div>
+                        <div style={s.infoRow}>
+                            <span><strong style={s.infoStrong}>Email:</strong> support@novaphone.vn</span>
                         </div>
                     </div>
+
+                    {/* Cột 3: Chính sách */}
                     <div>
-                        <div style={s.heading}>Sản phẩm</div>
-                        <ul style={{ listStyle: 'none', padding: 0 }}>
-                            {['iPhone', 'Samsung Galaxy', 'Xiaomi', 'Oppo', 'Vivo'].map(b => (
-                                <li key={b} style={{ marginBottom: 8 }}>
-                                    <Link to={`/products?search=${b}`} style={s.link}>{b}</Link>
+                        <div style={s.heading}>Chính sách</div>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                            {POLICY_LINKS.map(item => (
+                                <li key={item.label} style={{ marginBottom: 10 }}>
+                                    <a href={item.to} style={s.link} onClick={goTo(item.to)}>{item.label}</a>
                                 </li>
                             ))}
                         </ul>
                     </div>
+
+                    {/* Cột 4: Hỗ trợ */}
                     <div>
                         <div style={s.heading}>Hỗ trợ</div>
-                        <ul style={{ listStyle: 'none', padding: 0 }}>
-                            {['Chính sách đổi trả', 'Bảo hành', 'Thanh toán', 'Vận chuyển', 'Liên hệ'].map(item => (
-                                <li key={item} style={{ marginBottom: 8 }}>
-                                    <span style={s.link}>{item}</span>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                            {SUPPORT_LINKS.map(item => (
+                                <li key={item.label} style={{ marginBottom: 10 }}>
+                                    <a href={item.to} style={s.link} onClick={goTo(item.to)}>{item.label}</a>
                                 </li>
                             ))}
                         </ul>
-                    </div>
-                    <div>
-                        <div style={s.heading}>Liên hệ</div>
-                        {[
-                            { icon: '📍', text: '123 Nguyễn Văn Linh, TP.HCM' },
-                            { icon: '📞', text: '1800 1234 (Miễn phí)' },
-                            { icon: '✉️', text: 'support@phonestore.vn' },
-                            { icon: '⏰', text: '8:00 – 22:00 hàng ngày' },
-                        ].map(item => (
-                            <div key={item.text} style={{ display: 'flex', gap: 8, marginBottom: 10, fontSize: '0.84rem', color: 'rgba(255,255,255,0.48)', alignItems: 'flex-start' }}>
-                                <span style={{ flexShrink: 0 }}>{item.icon}</span>
-                                <span>{item.text}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div style={s.bottom}>
-                    <span>© 2025 PhoneStore. Tất cả quyền được bảo lưu.</span>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        {['Visa', 'Mastercard', 'MoMo', 'ZaloPay'].map(p => (
-                            <span key={p} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontSize: '0.68rem', padding: '4px 10px', borderRadius: 6 }}>{p}</span>
-                        ))}
                     </div>
                 </div>
             </div>
@@ -63,12 +84,10 @@ export default function Footer() {
 }
 
 const s = {
-    footer: { background: '#0A0A0A', color: 'rgba(255,255,255,0.5)', padding: '52px 0 28px', fontFamily: 'Nunito,sans-serif', marginTop: 'auto' },
-    inner: { maxWidth: 1280, margin: '0 auto', padding: '0 24px' },
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 40, marginBottom: 40 },
-    brand: { fontFamily: 'Nunito,sans-serif', fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: -0.3 },
-    desc: { fontSize: '0.84rem', lineHeight: 1.7, maxWidth: 240, marginBottom: 16 },
-    heading: { fontFamily: 'Nunito,sans-serif', fontWeight: 700, color: '#fff', fontSize: '0.9rem', marginBottom: 14 },
-    link: { color: 'rgba(255,255,255,0.48)', textDecoration: 'none', fontSize: '0.84rem', transition: 'color 0.2s', cursor: 'pointer' },
-    bottom: { borderTop: '1px solid rgba(255,255,255,0.07)', marginTop: 40, paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.76rem', flexWrap: 'wrap', gap: 8 },
+    footer: { background: '#0A0A0A', color: 'rgba(255,255,255,0.5)', padding: '52px 0 44px', fontFamily: 'Nunito,sans-serif', marginTop: 'auto' }, inner: { maxWidth: 1280, margin: '0 auto', padding: '0 24px' },
+    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 40, marginBottom: 0 }, brand: { fontFamily: 'Nunito,sans-serif', fontSize: '1.7rem', fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: -0.3 },
+    desc: { fontSize: '1rem', lineHeight: 1.7, maxWidth: 280, marginBottom: 18 },
+    heading: { fontFamily: 'Nunito,sans-serif', fontWeight: 700, color: '#fff', fontSize: '1.1rem', marginBottom: 18 },
+    link: { color: 'rgba(255,255,255,0.55)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s', cursor: 'pointer' },
+    infoRow: { display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 15, fontSize: '1rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }, infoStrong: { color: '#fff', fontWeight: 700 },
 }

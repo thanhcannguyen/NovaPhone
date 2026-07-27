@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom'
-import TopBar from '../components/user/TopBar'
 import Header from '../components/user/Header'
 import Footer from '../components/user/Footer'
 import Chatbot from '../components/user/Chatbot'
@@ -22,7 +21,6 @@ export default function UserLayout() {
                 }
             `}</style>
 
-            <TopBar />
             <Header />
 
             <ToastContainer />

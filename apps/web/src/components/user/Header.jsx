@@ -5,19 +5,21 @@ import { useCart } from '../../context/CartContext.jsx'
 import {
     Search, ShoppingCart, User, Package, LogOut,
     Menu, X, ChevronDown, Smartphone, ClipboardList, Home,
-    UserCircle, ShieldCheck, MessageSquare
+    UserCircle, ShieldCheck, MessageSquare, LogIn, UserPlus, Trash2
 } from 'lucide-react'
 
 export default function Header() {
     const { user, logout } = useAuth()
-    const { cartCount } = useCart()
+    const { cart, cartCount, updateItem, removeItem } = useCart()
     const navigate = useNavigate()
     const location = useLocation()
     const [menuOpen, setMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [searchVal, setSearchVal] = useState('')
     const [userDropOpen, setUserDropOpen] = useState(false)
+    const [cartPreviewOpen, setCartPreviewOpen] = useState(false)
     const userDropRef = useRef(null)
+    const cartItems = cart?.items ?? []
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 2)
@@ -88,6 +90,7 @@ export default function Header() {
         { to: '/', icon: <Home size={18} />, label: 'Trang chủ' },
         { to: '/products', icon: <Smartphone size={18} />, label: 'Sản phẩm', onClick: (e) => { handleProductsClick(e); setMenuOpen(false) } },
         { to: '/cart', icon: <ShoppingCart size={18} />, label: `Giỏ hàng${cartCount > 0 ? ` (${cartCount})` : ''}` },
+        ...(user ? [{ to: '/orders', icon: <Package size={18} />, label: 'Đơn hàng của tôi' }] : []),
         { to: '/policy', icon: <ShieldCheck size={18} />, label: 'Chính sách' },
         { to: '/contact', icon: <MessageSquare size={18} />, label: 'Liên hệ' },
     ]
@@ -166,6 +169,32 @@ export default function Header() {
                 border-radius: 100px; display: flex; align-items: center;
                 justify-content: center; padding: 0 4px; border: 2px solid #fff;
             }
+
+            .ps-cart.active { background: #E0EAFF; border-color: var(--primary); color: var(--primary); }
+            .ps-cart-wrap { position: relative; flex-shrink: 0; }
+
+            /* Cart preview dropdown */
+            .ps-cart-preview {
+                position: absolute; top: calc(100% + 10px); right: 0; width: 320px;
+                background: #fff; border: 1px solid var(--border); border-radius: 14px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 999; padding: 14px;
+                animation: dropIn 0.15s ease;
+            }
+            .ps-cart-preview-empty { padding: 24px 0; text-align: center; color: var(--gray); font-size: 0.85rem; }
+            .ps-cart-preview-title { font-weight: 800; font-size: 0.85rem; color: var(--dark); margin-bottom: 10px; }
+            .ps-cart-preview-list { max-height: 228px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding-right: 4px; }
+            .ps-cart-preview-list::-webkit-scrollbar { width: 5px; }
+            .ps-cart-preview-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+            .ps-cart-preview-item { display: flex; gap: 10px; align-items: center; }
+            .ps-cart-preview-img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--light); border: 1px solid var(--border); flex-shrink: 0; }
+            .ps-cart-preview-info { flex: 1; min-width: 0; }
+            .ps-cart-preview-name { font-size: 0.8rem; font-weight: 600; color: var(--dark); line-height: 1.3; margin-bottom: 2px; }
+            .ps-cart-preview-qty { font-size: 0.72rem; color: var(--gray); }
+            .ps-cart-preview-price { font-size: 0.8rem; font-weight: 700; color: var(--danger); white-space: nowrap; flex-shrink: 0; }
+            .ps-cart-preview-footer { border-top: 1px solid var(--border); padding-top: 12px; }
+            .ps-cart-preview-total { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: var(--dark); margin-bottom: 10px; }
+            .ps-cart-preview-btn { display: block; width: 100%; text-align: center; background: var(--dark); color: #fff; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; text-decoration: none; box-sizing: border-box; transition: background 0.15s; }
+            .ps-cart-preview-btn:hover { background: #262626; }
 
             /* User dropdown */
             .ps-user-drop { position: relative; flex-shrink: 0; }
@@ -297,26 +326,29 @@ export default function Header() {
                 .ps-hamburger { display: flex !important; }
             }
             @media (max-width: 600px) {
-                .ps-navbar-inner { padding: 0 12px; height: 56px; }
-                .ps-brand { font-size: 1.15rem; }
-                .ps-search { max-width: none; flex: 1; }
-                .ps-cart-label { display: none; }
-                .ps-cart { padding: 8px 10px; }
-            }
+            .ps-navbar-inner { padding: 0 12px; height: 56px; }
+            .ps-brand { font-size: 1.15rem; }
+            .ps-search { max-width: none; flex: 1; min-width: 0; }
+            .ps-search input { padding: 9px 36px 9px 12px; font-size: 0.8rem; }
+            .ps-search input::placeholder { overflow: visible; white-space: nowrap; }
+            .ps-search-icon { right: 10px; }
+            .ps-cart-label { display: none; }
+            .ps-cart { padding: 8px 10px; }
+}
         `}</style>
 
             <header className="ps-navbar">
                 <div className="ps-navbar-inner">
                     {/* Brand */}
                     <Link to="/" className="ps-brand" onClick={handleLogoClick}>
-                        Phone<span>Store</span>
+                        Nova<span>Phone</span>
                     </Link>
 
                     {/* Search */}
                     <div className="ps-search">
                         <input
                             type="text"
-                            placeholder="Tìm kiếm điện thoại..."
+                            placeholder="Bạn cần tìm gì ?"
                             value={searchVal}
                             onChange={e => setSearchVal(e.target.value)}
                             onKeyDown={handleSearch}
@@ -349,48 +381,111 @@ export default function Header() {
                     </nav>
 
                     {/* Cart */}
-                    <Link to="/cart" className="ps-cart">
-                        <ShoppingCart size={18} />
-                        <span className="ps-cart-label">Giỏ hàng</span>
-                        {cartCount > 0 && (
-                            <span className="ps-cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>
+                    <div className="ps-cart-wrap"
+                        onMouseEnter={() => setCartPreviewOpen(true)}
+                        onMouseLeave={() => setCartPreviewOpen(false)}>
+                        <Link to="/cart" className={`ps-cart${location.pathname === '/cart' ? ' active' : ''}`}>
+                            <ShoppingCart size={18} />
+                            <span className="ps-cart-label">Giỏ hàng</span>
+                            {cartCount > 0 && (
+                                <span className="ps-cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>
+                            )}
+                        </Link>
+                        {cartPreviewOpen && (
+                            <div className="ps-cart-preview">
+                                {cartItems.length === 0 ? (
+                                    <div className="ps-cart-preview-empty">Giỏ hàng của bạn đang trống</div>
+                                ) : (
+                                    <>
+                                        <div className="ps-cart-preview-title">Giỏ hàng ({cartCount} sản phẩm)</div>
+                                        <div className="ps-cart-preview-list">
+                                            {cartItems.map(item => (
+                                                <div key={item.product._id} className="ps-cart-preview-item">
+                                                    <img className="ps-cart-preview-img" src={item.product.image} alt={item.product.name}
+                                                        onError={e => { e.target.src = 'https://placehold.co/48x48/F8F9FB/0057FF?text=📱' }} />
+                                                    <div className="ps-cart-preview-info">
+                                                        <div className="ps-cart-preview-name">{item.product.name}</div>
+                                                        <div className="ps-cart-preview-qty">x{item.quantity}</div>
+                                                    </div>
+                                                    <div className="ps-cart-preview-price">{(item.price * item.quantity).toLocaleString('vi-VN')}đ</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="ps-cart-preview-footer">
+                                            <div className="ps-cart-preview-total">
+                                                <span>Tổng tiền</span>
+                                                <span>{cart.totalAmount.toLocaleString('vi-VN')}đ</span>
+                                            </div>
+                                            <Link to="/cart" className="ps-cart-preview-btn">Xem giỏ hàng</Link>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         )}
-                    </Link>
+                    </div>
 
-                    {/* User dropdown */}
+                    {/* User dropdown — nội dung khác nhau tùy đã đăng nhập hay chưa */}
                     <div className="ps-user-drop" ref={userDropRef}>
-                        <button className="ps-user-btn"
-                            style={{ background: '#d3dbec', borderRadius: 100, padding: '4px 10px 4px 4px' }}
-                            onClick={() => setUserDropOpen(o => !o)}>
-                            <div className="ps-avatar">{initials}</div>
-                            <span className="ps-user-name">{user?.name?.split(' ').slice(-1)[0]}</span>
-                            <ChevronDown size={14} color="var(--gray)"
-                                style={{ transition: 'transform 0.2s', transform: userDropOpen ? 'rotate(180deg)' : 'none' }} />
-                        </button>
+                        {user ? (
+                            <button className="ps-user-btn"
+                                style={{ background: '#d3dbec', borderRadius: 100, padding: '4px 10px 4px 4px' }}
+                                onClick={() => setUserDropOpen(o => !o)}>
+                                <div className="ps-avatar">{initials}</div>
+                                <span className="ps-user-name">{user?.name?.split(' ').slice(-1)[0]}</span>
+                                <ChevronDown size={14} color="var(--gray)"
+                                    style={{ transition: 'transform 0.2s', transform: userDropOpen ? 'rotate(180deg)' : 'none' }} />
+                            </button>
+                        ) : (
+                            <button className="ps-user-btn"
+                                style={{ background: '#d3dbec', borderRadius: 100, padding: '6px 14px' }}
+                                onClick={() => setUserDropOpen(o => !o)}>
+                                <User size={18} color="var(--dark)" />
+                                <ChevronDown size={14} color="var(--gray)"
+                                    style={{ transition: 'transform 0.2s', transform: userDropOpen ? 'rotate(180deg)' : 'none' }} />
+                            </button>
+                        )}
+
                         {userDropOpen && (
                             <div className="ps-user-menu">
-                                <div className="ps-user-menu-head">
-                                    <div className="ps-avatar">{initials}</div>
-                                    <div>
-                                        <div className="ps-user-menu-name">{user?.name}</div>
-                                        <div className="ps-user-menu-email">{user?.email}</div>
-                                    </div>
-                                </div>
-                                <Link to="/profile" className="ps-drop-item"
-                                    onClick={() => { setUserDropOpen(false) }}>
-                                    <UserCircle size={17} className="drop-icon" />
-                                    Hồ sơ cá nhân
-                                </Link>
-                                <Link to="/orders" className="ps-drop-item"
-                                    onClick={() => { setUserDropOpen(false) }}>
-                                    <Package size={17} className="drop-icon" />
-                                    Đơn hàng của tôi
-                                </Link>
-                                <div className="ps-drop-divider" />
-                                <button className="ps-drop-item danger" onClick={handleLogout}>
-                                    <LogOut size={17} className="drop-icon" />
-                                    Đăng xuất
-                                </button>
+                                {user ? (
+                                    <>
+                                        <div className="ps-user-menu-head">
+                                            <div className="ps-avatar">{initials}</div>
+                                            <div>
+                                                <div className="ps-user-menu-name">{user?.name}</div>
+                                                <div className="ps-user-menu-email">{user?.email}</div>
+                                            </div>
+                                        </div>
+                                        <Link to="/profile" className="ps-drop-item"
+                                            onClick={() => { setUserDropOpen(false) }}>
+                                            <UserCircle size={17} className="drop-icon" />
+                                            Hồ sơ cá nhân
+                                        </Link>
+                                        <Link to="/orders" className="ps-drop-item"
+                                            onClick={() => { setUserDropOpen(false) }}>
+                                            <Package size={17} className="drop-icon" />
+                                            Đơn hàng của tôi
+                                        </Link>
+                                        <div className="ps-drop-divider" />
+                                        <button className="ps-drop-item danger" onClick={handleLogout}>
+                                            <LogOut size={17} className="drop-icon" />
+                                            Đăng xuất
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link to="/login" className="ps-drop-item"
+                                            onClick={() => { setUserDropOpen(false) }}>
+                                            <LogIn size={17} className="drop-icon" />
+                                            Đăng nhập
+                                        </Link>
+                                        <Link to="/register" className="ps-drop-item"
+                                            onClick={() => { setUserDropOpen(false) }}>
+                                            <UserPlus size={17} className="drop-icon" />
+                                            Đăng ký
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -411,7 +506,7 @@ export default function Header() {
                 <div className="ps-mobile-head">
                     <Link to="/" className="ps-brand"
                         onClick={() => { handleLogoClick(); setMenuOpen(false) }}>
-                        Phone<span>Store</span>
+                        Nova<span>Phone</span>
                     </Link>
                     <button className="ps-mobile-close" onClick={() => setMenuOpen(false)}>
                         <X size={18} />
