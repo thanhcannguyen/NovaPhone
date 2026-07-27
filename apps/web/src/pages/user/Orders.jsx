@@ -28,7 +28,7 @@ export default function Orders() {
         <div style={{ background: '#F8F9FB', minHeight: '100vh', fontFamily: 'Nunito,sans-serif' }}>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
-                .orders-wrap { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+                .orders-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
                 .page-header { margin-bottom: 24px; }
                 .page-header h1 { font-size: 1.5rem; font-weight: 800; color: #0A0A0A; margin: 0 0 4px; }
                 .page-header p { color: #6B7280; font-size: 0.875rem; margin: 0; }
@@ -38,7 +38,7 @@ export default function Orders() {
                 .filter-tab.active { background: #0057FF; border-color: #0057FF; color: #fff; }
                 .filter-count { background: rgba(0,0,0,0.1); padding: 1px 7px; border-radius: 100px; font-size: 0.72rem; }
                 .filter-tab.active .filter-count { background: rgba(255,255,255,0.25); }
-                .order-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; overflow: hidden; margin-bottom: 14px; transition: box-shadow 0.2s; }
+                .order-card { background: #fff; border: 1px solid #D1D5DB; border-radius: 14px; overflow: hidden; margin-bottom: 14px; transition: box-shadow 0.2s; }
                 .order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
                 .order-card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #E5E7EB; background: #FAFAFA; flex-wrap: wrap; gap: 8px; }
                 .order-code { font-family: monospace; font-size: 0.85rem; font-weight: 800; color: #0057FF; background: #EEF4FF; padding: 3px 10px; border-radius: 6px; }
@@ -55,15 +55,15 @@ export default function Orders() {
                 .order-total strong { font-size: 1rem; font-weight: 800; color: #EF4444; margin-left: 4px; }
                 .btn-order-detail { background: #0057FF; color: #fff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 0.8rem; font-weight: 700; font-family: 'Nunito',sans-serif; cursor: pointer; transition: background 0.2s; }
                 .btn-order-detail:hover { background: #0040CC; }
-                .empty-state { text-align: center; padding: 60px 20px; background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; }
+                .empty-state { text-align: center; padding: 60px 20px; background: #fff; border: 1px solid #D1D5DB; border-radius: 14px; }
                 .breadcrumb { background: #fff; border-bottom: 1px solid #E5E7EB; padding: 10px 0; font-size: 0.82rem; color: #6B7280; }
-                .breadcrumb-inner { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+                .breadcrumb-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
                 @media (max-width: 600px) { .orders-wrap { padding: 16px; } }
             `}</style>
 
             <div className="breadcrumb">
                 <div className="breadcrumb-inner">
-                    <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito,sans-serif', fontSize: '0.82rem', padding: 0 }}>Trang chủ</button>
+                    <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito,sans-serif', fontSize: '0.82rem', padding: 0 }}>Trang chủ</button>
                     <span style={{ margin: '0 6px', fontSize: '0.7rem' }}>›</span>
                     <strong style={{ color: '#0A0A0A' }}>Đơn hàng của tôi</strong>
                 </div>
@@ -108,7 +108,7 @@ export default function Orders() {
                                 </div>
 
                                 <div className="order-items-preview">
-                                    {order.items.slice(0, 3).map((item, idx) => (
+                                    {order.items.map((item, idx) => (
                                         <div key={idx} className="order-item-row">
                                             <div className="order-item-img">
                                                 {item.image ? <img src={item.image} alt={item.name} onError={e => { e.target.style.display = 'none' }} /> : '📱'}
@@ -118,7 +118,6 @@ export default function Orders() {
                                             <div className="order-item-price">{(item.price * item.quantity).toLocaleString('vi-VN')}đ</div>
                                         </div>
                                     ))}
-                                    {order.items.length > 3 && <div style={{ fontSize: '0.78rem', color: '#6B7280', fontStyle: 'italic' }}>...và {order.items.length - 3} sản phẩm khác</div>}
                                 </div>
 
                                 <div className="order-card-footer">
@@ -127,7 +126,7 @@ export default function Orders() {
                                         <strong>{order.totalAmount.toLocaleString('vi-VN')}đ</strong>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8 }}>
-                                        <button className="btn-order-detail" onClick={() => navigate(`/orders/${order._id}`)}>Xem chi tiết →</button>
+                                        <button className="btn-order-detail" onClick={() => navigate(`/orders/${order._id}`)}>Xem chi tiết </button>
                                     </div>
                                 </div>
                             </div>
