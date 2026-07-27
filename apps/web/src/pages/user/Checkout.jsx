@@ -6,7 +6,7 @@ import { createOrderApi } from '../../api/orderApi'
 import { PAYMENT_METHODS as SHARED_PAYMENT_METHODS, SHIPPING } from '@novaphone/shared-types'
 import {
     MapPin, Phone, User, FileText, CreditCard,
-    ShoppingBag, Truck, ChevronRight, ArrowLeft,
+    ShoppingBag, Truck, ChevronRight,
     CheckCircle, ShoppingCart, Banknote
 } from 'lucide-react'
 
@@ -32,26 +32,22 @@ function CheckoutSteps({ step }) {
         { num: 3, label: 'Hoàn tất', active: step === 3 },
     ]
     return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, marginBottom: 28 }}>
+        <div className="ck-steps">
             {steps.map((s, idx) => (
-                <div key={s.num} style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                            width: 28, height: 28, borderRadius: '50%',
+                <div key={s.num} className="ck-step">
+                    <div className="ck-step-inner">
+                        <div className="ck-step-circle" style={{
                             background: s.done ? '#16A34A' : s.active ? '#0057FF' : '#E5E7EB',
                             color: s.done || s.active ? '#fff' : '#6B7280',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.78rem', fontWeight: 800, flexShrink: 0,
                         }}>
                             {s.done ? '✓' : s.num}
                         </div>
-                        <span style={{
-                            fontSize: '0.82rem', fontWeight: 700,
+                        <span className="ck-step-label" style={{
                             color: s.done ? '#16A34A' : s.active ? '#0057FF' : '#6B7280',
                         }}>{s.label}</span>
                     </div>
                     {idx < steps.length - 1 && (
-                        <div style={{ width: 48, height: 2, background: s.done ? '#16A34A' : '#E5E7EB', margin: '0 10px' }} />
+                        <div className="ck-step-connector" style={{ background: s.done ? '#16A34A' : '#E5E7EB' }} />
                     )}
                 </div>
             ))}
@@ -126,10 +122,10 @@ export default function Checkout() {
 
             /* Breadcrumb */
             .ck-breadcrumb { background:#fff; border-bottom:1px solid #E5E7EB; padding:10px 0; font-size:0.82rem; color:#6B7280; }
-            .ck-breadcrumb-inner { max-width:1100px; margin:0 auto; padding:0 24px; display:flex; align-items:center; gap:6px; }
+            .ck-breadcrumb-inner { max-width:1280px; margin:0 auto; padding:0 24px; display:flex; align-items:center; gap:6px; }
 
             /* Layout */
-            .ck-wrap { max-width:1100px; margin:0 auto; padding:24px; }
+            .ck-wrap { max-width:1280px; margin:0 auto; padding:24px; }
             .ck-grid { display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start; }
 
             /* Form card */
@@ -188,9 +184,21 @@ export default function Checkout() {
             .ck-alert-err { background:#FEF2F2; border:1px solid #FECACA; color:#DC2626; border-radius:10px; padding:12px 16px; font-size:0.875rem; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
 
             /* Responsive */
+            /* Step indicator — CSS mặc định, áp dụng mọi kích thước màn hình */
+            .ck-steps { display:flex; align-items:center; justify-content:center; margin-bottom:28px; }
+            .ck-step { display:flex; align-items:center; flex-shrink:0; }
+            .ck-step-inner { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+            .ck-step-circle { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:800; flex-shrink:0; }
+            .ck-step-label { font-size:0.82rem; font-weight:700; white-space:nowrap; }
+            .ck-step-connector { width:48px; height:2px; margin:0 10px; flex-shrink:1; min-width:12px; }
+
             @media (max-width:900px) {
                 .ck-grid { grid-template-columns:1fr; }
                 .ck-summary { position:static; }
+            }
+            @media (max-width:480px) {
+                .ck-step-connector { width:16px; margin:0 6px; }
+                .ck-step-inner { gap:5px; }
             }
             @media (max-width:600px) {
                 .ck-wrap { padding:14px; }
@@ -346,9 +354,7 @@ export default function Checkout() {
                                     <ShoppingBag size={18} style={IS} />
                                     {loading ? 'Đang xử lý...' : 'Đặt hàng ngay'}
                                 </button>
-                                <button type="button" className="btn-back" onClick={() => navigate('/cart')}>
-                                    <ArrowLeft size={14} style={IS} /> Quay lại giỏ hàng
-                                </button>
+
                             </div>
                         </div>
                     </div>
