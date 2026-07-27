@@ -17,31 +17,44 @@ export default function Cart() {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
                 .cart-wrap { max-width: 1280px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
-                .cart-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; overflow: hidden; }
+                .cart-card { background: #fff; border: 1px solid #D1D5DB; border-radius: 16px; overflow: hidden; }
                 .cart-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #E5E7EB; }
                 .cart-title { font-size: 1.05rem; font-weight: 800; color: #0A0A0A; display: flex; align-items: center; gap: 8px; }
                 .cart-title::before { content: ''; display: inline-block; width: 4px; height: 18px; background: #0057FF; border-radius: 2px; }
                 .btn-clear { background: none; border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 6px 14px; font-size: 0.8rem; font-weight: 600; color: #6B7280; cursor: pointer; font-family: 'Nunito',sans-serif; transition: all 0.2s; }
                 .btn-clear:hover { border-color: #EF4444; color: #EF4444; }
-                .cart-item { display: grid; grid-template-columns: 80px 1fr auto; gap: 16px; align-items: center; padding: 16px 24px; border-bottom: 1px solid #E5E7EB; transition: background 0.15s; }
+
+                /* CSS Bảng tiêu đề & Item mới */
+                .cart-table-head { display: grid; grid-template-columns: 1fr 130px 140px 130px; gap: 16px; padding: 12px 24px; background: #F8F9FB; border-bottom: 1px solid #E5E7EB; font-size: 0.75rem; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.4px; }
+                .cart-table-head span:nth-child(2) { text-align: left; }
+                .cart-table-head span:nth-child(3) { text-align: center; }
+                .cart-table-head span:nth-child(4) { text-align: right; }
+
+                .cart-item { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; padding: 16px 24px; border-bottom: 1px solid #E5E7EB; transition: background 0.15s; }
                 .cart-item:last-child { border-bottom: none; }
                 .cart-item:hover { background: #FAFAFA; }
-                .cart-item-img { width: 80px; height: 80px; border-radius: 10px; background: #F8F9FB; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #E5E7EB; }
+
+                .cart-item-product { display: flex; align-items: center; gap: 14px; min-width: 0; }
+                .cart-item-img { width: 64px; height: 64px; border-radius: 10px; background: #F8F9FB; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #E5E7EB; flex-shrink: 0; }
                 .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
-                .cart-item-brand { font-size: 0.65rem; font-weight: 700; color: #0057FF; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-                .cart-item-name { font-weight: 700; font-size: 0.9rem; color: #0A0A0A; margin-bottom: 6px; line-height: 1.3; transition: color 0.15s; }
-                .cart-item-name:hover { color: #0057FF; text-decoration: underline; }
                 .cart-item-img:hover { opacity: 0.9; }
-                .cart-item-price { font-size: 1rem; font-weight: 800; color: #EF4444; }
-                .cart-item-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-                .cart-item-subtotal { font-size: 1rem; font-weight: 800; color: #0A0A0A; white-space: nowrap; }
+                .cart-item-brand { font-size: 0.65rem; font-weight: 700; color: #0057FF; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+                .cart-item-name { font-weight: 700; font-size: 0.9rem; color: #0A0A0A; margin-bottom: 4px; line-height: 1.3; transition: color 0.15s; }
+                .cart-item-name:hover { color: #0057FF; text-decoration: underline; }
+                .btn-remove { background: none; border: none; color: #EF4444; cursor: pointer; font-size: 0.78rem; font-weight: 600; padding: 0; font-family: 'Nunito',sans-serif; }
+                .btn-remove:hover { text-decoration: underline; }
+
+                .cart-item-meta { display: grid; grid-template-columns: 130px 140px 130px; gap: 16px; align-items: center; }
+                .cart-item-price-col { font-size: 0.9rem; font-weight: 700; color: #0A0A0A; }
+                .cart-item-qty-col { display: flex; justify-content: center; }
+                .cart-item-subtotal-col { font-size: 1rem; font-weight: 800; color: #0A0A0A; text-align: right; white-space: nowrap; }
+
                 .qty-ctrl { display: flex; align-items: center; border: 1.5px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
                 .qty-ctrl button { width: 30px; height: 30px; background: #F8F9FB; border: none; cursor: pointer; font-size: 1rem; color: #0A0A0A; transition: background 0.15s; font-family: 'Nunito',sans-serif; }
                 .qty-ctrl button:hover { background: #ddd; }
                 .qty-ctrl span { width: 40px; height: 30px; border-left: 1.5px solid #E5E7EB; border-right: 1.5px solid #E5E7EB; text-align: center; font-size: 0.875rem; font-weight: 700; font-family: 'Nunito',sans-serif; line-height: 30px; display: block; }
-                .btn-remove { background: none; border: none; color: #6B7280; cursor: pointer; font-size: 0.8rem; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.2s; font-family: 'Nunito',sans-serif; }
-                .btn-remove:hover { color: #EF4444; }
-                .summary-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; padding: 24px; position: sticky; top: 88px; }
+
+                .summary-card { background: #fff; border: 1px solid #D1D5DB; border-radius: 16px; padding: 24px; position: sticky; top: 88px; }
                 .summary-title { font-size: 1rem; font-weight: 800; color: #0A0A0A; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; gap: 8px; }
                 .summary-title::before { content: ''; display: inline-block; width: 4px; height: 16px; background: #0057FF; border-radius: 2px; }
                 .summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; margin-bottom: 12px; }
@@ -58,20 +71,26 @@ export default function Cart() {
                 .empty-cart { text-align: center; padding: 60px 20px; }
                 .breadcrumb { background: #fff; border-bottom: 1px solid #E5E7EB; padding: 10px 0; font-size: 0.82rem; color: #6B7280; }
                 .breadcrumb-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+                
                 @media (max-width: 900px) {
                     .cart-wrap { grid-template-columns: 1fr; padding: 14px; }
                     .summary-card { position: static; }
                 }
+
+                /* Responsive Mobile cập nhật */
                 @media (max-width: 600px) {
-                    .cart-item { grid-template-columns: 64px 1fr; }
-                    .cart-item-actions { flex-direction: row; align-items: center; grid-column: 1/-1; justify-content: space-between; }
+                    .cart-table-head { display: none; }
+                    .cart-item { grid-template-columns: 1fr; row-gap: 10px; }
+                    .cart-item-img { width: 52px; height: 52px; }
+                    .cart-item-meta { grid-template-columns: 1fr auto; }
+                    .cart-item-price-col { display: none; }
                 }
             `}</style>
 
             {/* Breadcrumb */}
             <div className="breadcrumb">
                 <div className="breadcrumb-inner">
-                    <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito,sans-serif', fontSize: '0.82rem', padding: 0 }}>Trang chủ</button>
+                    <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito,sans-serif', fontSize: '0.82rem', padding: 0 }}>Trang chủ</button>
                     <span style={{ margin: '0 6px', fontSize: '0.7rem' }}>›</span>
                     <strong style={{ color: '#0A0A0A' }}>Giỏ hàng</strong>
                 </div>
@@ -96,44 +115,52 @@ export default function Cart() {
                                     <div className="cart-title">Giỏ hàng ({items.reduce((s, i) => s + i.quantity, 0)} sản phẩm)</div>
                                     <button className="btn-clear" onClick={clearCart}>🗑️ Xóa tất cả</button>
                                 </div>
+
+                                {/* Hàng tiêu đề bảng */}
+                                <div className="cart-table-head">
+                                    <span>Thông tin sản phẩm</span>
+                                    <span>Đơn giá</span>
+                                    <span>Số lượng</span>
+                                    <span>Thành tiền</span>
+                                </div>
+
                                 {items.map(item => {
                                     const product = item.product
                                     if (!product) return null
                                     const subtotal = item.price * item.quantity
                                     return (
                                         <div key={product._id} className="cart-item">
-                                            <div className="cart-item-img"
-                                                style={{ cursor: 'pointer' }}
-                                                onClick={() => navigate(`/product/${product._id}`)}>
-                                                <img src={product.image} alt={product.name}
-                                                    onError={e => { e.target.src = 'https://placehold.co/80x80/F8F9FB/0057FF?text=📱' }} />
-                                            </div>
-                                            <div>
-                                                <div className="cart-item-brand">{product.specs?.brand || product.category?.name}</div>
-                                                <div className="cart-item-name"
+                                            <div className="cart-item-product">
+                                                <div className="cart-item-img"
                                                     style={{ cursor: 'pointer' }}
                                                     onClick={() => navigate(`/product/${product._id}`)}>
-                                                    {product.name}
+                                                    <img src={product.image} alt={product.name}
+                                                        onError={e => { e.target.src = 'https://placehold.co/80x80/F8F9FB/0057FF?text=📱' }} />
                                                 </div>
-                                                <div className="cart-item-price">{item.price.toLocaleString('vi-VN')}đ</div>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div className="cart-item-brand">{product.specs?.brand || product.category?.name}</div>
+                                                    <div className="cart-item-name"
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={() => navigate(`/product/${product._id}`)}>
+                                                        {product.name}
+                                                    </div>
+                                                    <button className="btn-remove" onClick={() => removeItem(product._id)}>Xóa</button>
+                                                </div>
                                             </div>
-                                            <div className="cart-item-actions">
-                                                <div className="cart-item-subtotal">{subtotal.toLocaleString('vi-VN')}đ</div>
-                                                <div className="qty-ctrl">
-                                                    <button onClick={() => updateItem(product._id, item.quantity - 1)}>−</button>
-                                                    <span>{item.quantity}</span>
-                                                    <button onClick={() => updateItem(product._id, item.quantity + 1)}>+</button>
+                                            <div className="cart-item-meta">
+                                                <div className="cart-item-price-col">{item.price.toLocaleString('vi-VN')}đ</div>
+                                                <div className="cart-item-qty-col">
+                                                    <div className="qty-ctrl">
+                                                        <button onClick={() => updateItem(product._id, item.quantity - 1)}>−</button>
+                                                        <span>{item.quantity}</span>
+                                                        <button onClick={() => updateItem(product._id, item.quantity + 1)}>+</button>
+                                                    </div>
                                                 </div>
-                                                <button className="btn-remove" onClick={() => removeItem(product._id)}>🗑️ Xóa</button>
+                                                <div className="cart-item-subtotal-col">{subtotal.toLocaleString('vi-VN')}đ</div>
                                             </div>
                                         </div>
                                     )
                                 })}
-                            </div>
-                            <div style={{ marginTop: 12 }}>
-                                <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: '#0057FF', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Nunito,sans-serif', display: 'flex', alignItems: 'center', gap: 5 }}>
-                                    ← Tiếp tục mua sắm
-                                </button>
                             </div>
                         </div>
 
@@ -158,8 +185,8 @@ export default function Cart() {
                                     <span className="lbl">Tổng cộng</span>
                                     <span className="val">{totalAmount.toLocaleString('vi-VN')}đ</span>
                                 </div>
-                                <button className="btn-checkout" onClick={() => navigate('/checkout')}>💳 Tiến hành thanh toán</button>
-                                <button className="btn-continue" onClick={() => navigate('/products')}>← Tiếp tục mua sắm</button>
+                                <button className="btn-checkout" onClick={() => navigate('/checkout')}> Tiến hành thanh toán</button>
+                                <button className="btn-continue" onClick={() => navigate('/products')}> Tiếp tục mua sắm</button>
                             </div>
                         </div>
                     </>
