@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useSearchParams, useLocation } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getCategories } from '../../api/categoryApi'
 import { getProducts } from '../../api/productApi'
 import ProductCard from '../../components/user/ProductCard'
@@ -35,9 +35,9 @@ function BannerSlider() {
                     <span style={{ display: 'inline-block', background: 'rgba(0,87,255,0.18)', border: `1px solid rgba(0,87,255,0.4)`, color: b.accent, fontSize: '0.68rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', padding: '3px 12px', borderRadius: 100, marginBottom: 14 }}>{b.tag}</span>
                     <h2 style={{ fontSize: '1.9rem', fontWeight: 900, color: '#F8F9FB', margin: '0 0 8px', lineHeight: 1.15, letterSpacing: -0.5 }}>{b.title}</h2>
                     <p style={{ fontSize: '0.85rem', color: 'rgba(248,249,251,0.55)', margin: '0 0 16px', lineHeight: 1.6 }}>{b.sub}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div className="ps-banner-cta-row">
                         <span style={{ fontSize: '1.5rem', fontWeight: 800, color: b.accent }}>{b.price}</span>
-                        <button style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: '#0057FF', color: '#fff', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}>Xem ngay →</button>
+                        <button style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: '#0057FF', color: '#fff', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}>Xem ngay</button>
                     </div>
                 </div>
                 <div style={{ position: 'absolute', right: 0, top: 0, width: '45%', height: '100%' }}>
@@ -57,12 +57,13 @@ function BannerSlider() {
 
 
 export default function ProductsPage() {
+    const navigate = useNavigate()
     const [searchParams] = useSearchParams()
-    const { state: navState } = useLocation()
+
     const [categories, setCategories] = useState([])
     const [products, setProducts] = useState([])
-    const [selectedCategory, setSelectedCategory] = useState(null)
-    const [selectedPrice, setSelectedPrice] = useState(0)
+    const [selectedCategories, setSelectedCategories] = useState([]) // mảng rỗng = chưa lọc hãng nào = hiện tất cả
+    const [selectedPriceRanges, setSelectedPriceRanges] = useState([]) // mảng rỗng = chưa lọc giá nào = hiện tất cả
     const [search, setSearch] = useState('')
     const [loading, setLoading] = useState(true)
 
@@ -71,16 +72,8 @@ export default function ProductsPage() {
     const [sortBy, setSortBy] = useState('newest')
     const [sortOpen, setSortOpen] = useState(false)
 
-    useEffect(() => {
-        if (navState?.scrollToFilter) {
-            const t = setTimeout(() => {
-                const el = document.getElementById('filter-bar')
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                window.history.replaceState({}, '', window.location.href)
-            }, 120)
-            return () => clearTimeout(t)
-        }
-    }, [navState])
+
+
 
     useEffect(() => {
         const handler = () => { setShimmerAll(true); setTimeout(() => setShimmerAll(false), 1600) }
@@ -89,23 +82,46 @@ export default function ProductsPage() {
     }, [])
 
     useEffect(() => { setSearch(searchParams.get('search') || '') }, [searchParams])
+    useEffect(() => {
+        const catId = searchParams.get('category')
+        if (catId) setSelectedCategories([catId])
+    }, [searchParams])
     useEffect(() => { getCategories().then(r => setCategories(r.data.data)).catch(console.error) }, [])
+    // Lọc nhiều hãng / nhiều khoảng giá cùng lúc cần logic OR bên trong mỗi nhóm —
+    // API hiện tại chỉ nhận 1 category/1 khoảng giá, nên gọi API chỉ với "search",
+    // còn lọc hãng + giá thực hiện ở client (xem filteredProducts bên dưới).
     useEffect(() => {
         setLoading(true)
-        const pr = PRICE_RANGES[selectedPrice]
         const params = {}
-        if (selectedCategory) params.category = selectedCategory
-        if (pr.min) params.minPrice = pr.min
-        if (pr.max) params.maxPrice = pr.max
         if (search) params.search = search
         getProducts(params).then(r => setProducts(r.data.data)).catch(console.error).finally(() => setLoading(false))
-    }, [selectedCategory, selectedPrice, search])
+    }, [search])
 
 
-    const clearAll = () => { setSelectedCategory(null); setSelectedPrice(0); setSearch('') }
-    const hasFilter = selectedCategory !== null || selectedPrice !== 0 || search !== ''
+    const toggleCategory = (id) => {
+        if (id === null) { setSelectedCategories([]); return }
+        setSelectedCategories(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+    }
+    const togglePriceRange = (i) => {
+        if (i === 0) { setSelectedPriceRanges([]); return }
+        setSelectedPriceRanges(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
+    }
 
-    const sortedProducts = [...products].sort((a, b) => {
+    const clearAll = () => { setSelectedCategories([]); setSelectedPriceRanges([]); setSearch('') }
+    const hasFilter = selectedCategories.length > 0 || selectedPriceRanges.length > 0 || search !== ''
+
+    // Lọc theo nhiều hãng (OR trong nhóm hãng) VÀ nhiều khoảng giá (OR trong nhóm giá)
+    const filteredProducts = products.filter(p => {
+        const catId = p.category?._id || p.category
+        const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(catId)
+        const matchPrice = selectedPriceRanges.length === 0 || selectedPriceRanges.some(i => {
+            const pr = PRICE_RANGES[i]
+            return (pr.min == null || p.price >= pr.min) && (pr.max == null || p.price <= pr.max)
+        })
+        return matchCategory && matchPrice
+    })
+
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
         if (sortBy === 'price_asc') return a.price - b.price
         if (sortBy === 'price_desc') return b.price - a.price
         if (sortBy === 'discount') return (b.originalPrice - b.price) - (a.originalPrice - a.price)
@@ -149,6 +165,15 @@ export default function ProductsPage() {
                 /* Price presets */
                 .ps-price-preset { padding: 4px 10px; border: 1.5px solid #E5E7EB; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: #fff; color: #6B7280; cursor: pointer; transition: all 0.15s; font-family: 'Nunito',sans-serif; }
                 .ps-price-preset:hover, .ps-price-preset.active { border-color: #0057FF; color: #0057FF; background: #EEF4FF; }
+
+                /* Filter section header kiểu underline ngắn dưới chữ */
+                .ps-filter-head-v2 { padding: 14px 16px 10px; }
+                .ps-filter-title-underline { font-weight: 800; font-size: 0.8rem; letter-spacing: 0.6px; text-transform: uppercase; color: #0A0A0A; display: inline-block; padding-bottom: 8px; border-bottom: 2.5px solid #0057FF; }
+                .ps-banner-cta-row { display: flex; align-items: center; gap: 14px; }
+                .ps-banner-cta-row button { white-space: nowrap; }
+                @media (max-width: 600px) {
+                    .ps-banner-cta-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+                }
 
                 /* Toolbar */
                 .ps-toolbar { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 10px 16px; margin-bottom: 18px; gap: 8px; flex-wrap: wrap; }
@@ -209,7 +234,8 @@ export default function ProductsPage() {
             {/* Breadcrumb */}
             <div className="ps-breadcrumb">
                 <div className="ps-breadcrumb-inner">
-                    Trang chủ <span style={{ margin: '0 6px', fontSize: '0.7rem' }}>›</span>
+                    <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>Trang chủ</button>
+                    <span style={{ margin: '0 6px', fontSize: '0.7rem' }}>›</span>
                     <strong style={{ color: '#0A0A0A' }}>Sản phẩm{search ? ` — "${search}"` : ''}</strong>
                 </div>
             </div>
@@ -230,35 +256,43 @@ export default function ProductsPage() {
                 {/* SIDEBAR */}
                 <aside className={`ps-sidebar${sidebarOpen ? ' open' : ''}`}>
 
-                    {/* Danh mục */}
+                    {/* Thương hiệu */}
                     <div className="ps-filter-card">
-                        <div className="ps-filter-head">
-                            <span className="ps-filter-head-title">📂 Danh mục</span>
+                        <div className="ps-filter-head-v2">
+                            <span className="ps-filter-title-underline">Thương hiệu</span>
                         </div>
                         <div className="ps-filter-body">
-                            {[{ _id: null, name: 'Tất cả' }, ...categories].map(c => (
-                                <label key={c._id || 'all'} className="ps-filter-check">
-                                    <input type="radio" name="category"
-                                        checked={selectedCategory === c._id}
-                                        onChange={() => setSelectedCategory(c._id)} />
+                            <label className="ps-filter-check">
+                                <input type="checkbox"
+                                    checked={selectedCategories.length === 0}
+                                    onChange={() => toggleCategory(null)} />
+                                Tất cả
+                            </label>
+                            {categories.map(c => (
+                                <label key={c._id} className="ps-filter-check">
+                                    <input type="checkbox"
+                                        checked={selectedCategories.includes(c._id)}
+                                        onChange={() => toggleCategory(c._id)} />
                                     {c.name}
                                 </label>
                             ))}
                         </div>
                     </div>
 
-                    {/* Khoảng giá */}
+                    {/* Chọn mức giá */}
                     <div className="ps-filter-card">
-                        <div className="ps-filter-head">
-                            <span className="ps-filter-head-title">💰 Khoảng giá</span>
+                        <div className="ps-filter-head-v2">
+                            <span className="ps-filter-title-underline">Chọn mức giá</span>
                         </div>
                         <div className="ps-filter-body">
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                {PRICE_RANGES.map((pr, i) => (
-                                    <button key={i} className={`ps-price-preset${selectedPrice === i ? ' active' : ''}`}
-                                        onClick={() => setSelectedPrice(i)}>{pr.label}</button>
-                                ))}
-                            </div>
+                            {PRICE_RANGES.map((pr, i) => (
+                                <label key={i} className="ps-filter-check">
+                                    <input type="checkbox"
+                                        checked={i === 0 ? selectedPriceRanges.length === 0 : selectedPriceRanges.includes(i)}
+                                        onChange={() => togglePriceRange(i)} />
+                                    {pr.label}
+                                </label>
+                            ))}
                             {hasFilter && (
                                 <button className="ps-btn-clear" onClick={clearAll}>✕ Xoá bộ lọc</button>
                             )}
@@ -275,7 +309,7 @@ export default function ProductsPage() {
 
                     {/* Section title */}
                     <div className="ps-section-title">
-                        {search ? `Kết quả: "${search}"` : selectedCategory ? categories.find(c => c._id === selectedCategory)?.name || 'Sản phẩm' : 'Tất cả sản phẩm'}
+                        {search ? `Kết quả: "${search}"` : selectedCategories.length === 1 ? categories.find(c => c._id === selectedCategories[0])?.name || 'Sản phẩm' : 'Tất cả sản phẩm'}
                     </div>
 
                     {/* Toolbar */}
