@@ -102,7 +102,7 @@ export default function Policy() {
             @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
             .policy-page svg { display:block!important; border:none!important; outline:none!important; box-shadow:none!important; background:transparent!important; }
             .policy-highlights { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
-            .highlight-card { background:#fff; border:1px solid #E5E7EB; border-radius:14px; padding:20px; text-align:center; transition:all 0.2s; cursor:default; }
+            .highlight-card { background:#fff; border:1px solid ##D1D5DB; border-radius:14px; padding:20px; text-align:center; transition:all 0.2s; cursor:default; }
             .highlight-card:hover { border-color:#0057FF; box-shadow:0 6px 20px rgba(0,87,255,0.08); transform:translateY(-2px); }
             .tab-nav { display:flex; border-bottom:1px solid #E5E7EB; overflow-x:auto; scrollbar-width:none; }
             .tab-nav::-webkit-scrollbar { display:none; }
@@ -115,14 +115,14 @@ export default function Policy() {
 
             {/* Breadcrumb */}
             <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '10px 0' }} className="policy-page">
-                <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 24px', fontSize: '0.82rem', color: '#6B7280', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>Trang chủ</button>
+                <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', fontSize: '0.82rem', color: '#6B7280', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>Trang chủ</button>
                     <ChevronRight size={12} style={{ ...IS, color: '#9CA3AF' }} />
                     <strong style={{ color: '#0A0A0A' }}>Chính sách</strong>
                 </div>
             </div>
 
-            <div className="policy-wrap policy-page" style={{ maxWidth: 1000, margin: '0 auto', padding: '36px 24px' }}>
+            <div className="policy-wrap policy-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '36px 24px' }}>
 
                 {/* Page header */}
                 <div style={{ textAlign: 'center', marginBottom: 36 }}>
@@ -143,7 +143,7 @@ export default function Policy() {
                 </div>
 
                 {/* Tabs */}
-                <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 16, overflow: 'hidden' }}>
+                <div style={{ background: '#fff', border: '1px solid #D1D5DB', borderRadius: 16, overflow: 'hidden' }}>
                     <div className="tab-nav">
                         {TABS.map(t => (
                             <button key={t.key} className={`tab-btn${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>

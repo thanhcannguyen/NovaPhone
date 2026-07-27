@@ -50,7 +50,7 @@ export default function Contact() {
             .form-control { width:100%; background:#F8F9FB; border:1.5px solid #E5E7EB; border-radius:10px; padding:11px 14px; font-size:0.875rem; font-family:'Nunito',sans-serif; color:#0A0A0A; outline:none; transition:border-color 0.2s; box-sizing:border-box; }
             .form-control:focus { border-color:#0057FF; background:#fff; box-shadow:0 0 0 3px rgba(0,87,255,0.08); }
             .form-control::placeholder { color:#9CA3AF; }
-            .faq-item { border:1px solid #E5E7EB; border-radius:12px; overflow:hidden; margin-bottom:10px; }
+            .faq-item { border:1px solid #D1D5DB; border-radius:12px; overflow:hidden; margin-bottom:10px; }
             .faq-question { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; font-size:0.9rem; font-weight:700; color:#0A0A0A; cursor:pointer; background:#fff; transition:background 0.15s; }
             .faq-question:hover { background:#F8F9FB; }
             .faq-answer { padding:0 20px 16px; font-size:0.875rem; color:#374151; line-height:1.7; background:#fff; }
@@ -60,14 +60,14 @@ export default function Contact() {
 
             {/* Breadcrumb */}
             <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '10px 0' }} className="contact-page">
-                <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', fontSize: '0.82rem', color: '#6B7280', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>Trang chủ</button>
+                <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', fontSize: '0.82rem', color: '#6B7280', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'Nunito,sans-serif', padding: 0 }}>Trang chủ</button>
                     <ChevronRight size={12} style={{ ...IS, color: '#9CA3AF' }} />
                     <strong style={{ color: '#0A0A0A' }}>Liên hệ</strong>
                 </div>
             </div>
 
-            <div className="contact-wrap contact-page" style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 24px' }}>
+            <div className="contact-wrap contact-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '36px 24px' }}>
 
                 {/* Page header */}
                 <div style={{ textAlign: 'center', marginBottom: 36 }}>
@@ -111,7 +111,7 @@ export default function Contact() {
                     </div>
 
                     {/* ── RIGHT: Form ── */}
-                    <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 16, padding: 32 }}>
+                    <div style={{ background: '#fff', border: '1px solid #D1D5DB', borderRadius: 16, padding: 32 }}>
                         <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0A0A0A', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                             <MessageSquare size={18} style={{ ...IS, color: '#0057FF' }} /> Gửi tin nhắn
                         </h3>
