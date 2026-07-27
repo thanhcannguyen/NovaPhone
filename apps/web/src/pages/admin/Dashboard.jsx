@@ -120,7 +120,7 @@ export default function Dashboard() {
                         className="dash-topbar-btn"
                         style={{ background: '#0057FF', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'Nunito,sans-serif', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0 }}
                         onClick={() => navigate('/admin/products')}>
-                        + Thêm sản phẩm
+                        Thêm sản phẩm
                     </button>
                 }
             />
@@ -148,7 +148,7 @@ export default function Dashboard() {
                     <div className="section-card">
                         <div className="section-card-header">
                             <div className="section-card-title">🛍️ Đơn hàng mới nhất</div>
-                            <button className="btn-view-all" onClick={() => navigate('/admin/orders')}>Xem tất cả →</button>
+                            <button className="btn-view-all" onClick={() => navigate('/admin/orders')}>Xem tất cả </button>
                         </div>
                         <div style={{ overflowX: 'auto' }}>
                             <table className="admin-table">

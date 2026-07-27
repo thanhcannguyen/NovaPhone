@@ -38,7 +38,7 @@ export default function Sidebar() {
             {/* Brand */}
             <div style={cs.brand}>
                 <a href="/products" target="_blank" style={cs.brandLink}>
-                    Phone<span style={{ color: '#0057FF' }}>Store</span>
+                    Nova<span style={{ color: '#0057FF' }}>Phone</span>
                 </a>
                 <div style={cs.brandSub}>Admin Panel</div>
             </div>
