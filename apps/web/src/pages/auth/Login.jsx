@@ -17,15 +17,19 @@ export default function Login() {
         setError('')
     }
 
+    const [needsVerify, setNeedsVerify] = useState(false)
+
     const handleSubmit = async (e) => {
         e.preventDefault()
-        setLoading(true); setError('')
+        setLoading(true); setError(''); setNeedsVerify(false)
         try {
             const res = await axiosInstance.post('/auth/login', formData)
             login(res.data.token, res.data.data)
-            navigate(res.data.data.role === 'admin' ? '/admin' : '/products')
+            navigate(res.data.data.role === 'admin' ? '/admin' : '/')
         } catch (err) {
-            setError(err.response?.data?.message || 'Email hoặc mật khẩu không đúng')
+            const data = err.response?.data
+            setError(data?.message || 'Email hoặc mật khẩu không đúng')
+            if (data?.emailNotVerified) setNeedsVerify(true)
         } finally {
             setLoading(false)
         }
@@ -226,11 +230,17 @@ export default function Login() {
                     <div className="login-logo">📱</div>
 
                     <h1 className="login-title">Chào mừng trở lại</h1>
-                    <p className="login-sub">Đăng nhập vào PhoneStore của bạn</p>
+                    <p className="login-sub">Đăng nhập vào NovaPhone của bạn</p>
 
                     {error && (
-                        <div className="login-error">
-                            <span>⚠️</span> {error}
+                        <div className="login-error" style={{ flexDirection: 'column', gap: 6 }}>
+                            <span>⚠️ {error}</span>
+                            {needsVerify && (
+                                <Link to="/verify-email" state={{ email: formData.email }}
+                                    style={{ color: '#dc2626', fontWeight: 800, textDecoration: 'underline' }}>
+                                    Đến trang xác thực email
+                                </Link>
+                            )}
                         </div>
                     )}
 

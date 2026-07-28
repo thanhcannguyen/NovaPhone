@@ -72,6 +72,16 @@ const userSchema = new mongoose.Schema({
         default: false
     },
 
+    // Mã OTP xác thực email — select: false để không tự trả về khi query user thông thường
+    emailOTP: {
+        type: String,
+        select: false
+    },
+    emailOTPExpire: {
+        type: Date,
+        select: false
+    },
+
 }, {
     // Tự tạo createdAt và updatedAt
     timestamps: true

@@ -16,13 +16,15 @@ export default function Register() {
         setError(''); setMessage('')
     }
 
+    const [registeredEmail, setRegisteredEmail] = useState('')
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setLoading(true); setMessage(''); setError('')
         try {
             await axiosInstance.post('/auth/register', formData)
-            setMessage('Đăng ký thành công! Đang chuyển trang...')
-            setTimeout(() => navigate('/login'), 1500)
+            setMessage('Đăng ký thành công!')
+            setRegisteredEmail(formData.email)
         } catch (err) {
             setError(err.response?.data?.message || 'Đăng ký thất bại')
         } finally {
@@ -116,10 +118,13 @@ export default function Register() {
             .reg-alert-ok {
                 background: #f0fdf4; border: 1px solid #bbf7d0;
                 color: #15803d; border-radius: 10px;
-                padding: 10px 14px; font-size: 13px;
+                padding: 12px 14px; font-size: 13px;
                 margin-bottom: 18px;
-                display: flex; align-items: center; gap: 8px;
-                justify-content: center;
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                text-align: center;
+                gap: 6px;
             }
             .reg-alert-err {
                 background: #fff1f1; border: 1px solid #fecaca;
@@ -128,6 +133,7 @@ export default function Register() {
                 margin-bottom: 18px;
                 display: flex; align-items: center; gap: 8px;
                 justify-content: center;
+                text-align: center;
             }
 
             .reg-field {
@@ -210,54 +216,66 @@ export default function Register() {
                     <h1 className="reg-title">Tạo tài khoản</h1>
                     <p className="reg-sub">Đăng ký để mua sắm ngay hôm nay</p>
 
-                    {message && <div className="reg-alert-ok"><span>✅</span> {message}</div>}
+                    {message && (
+                        <div className="reg-alert-ok">
+                            <span style={{ fontWeight: 700 }}>✅ {message}</span>
+                            <span>Vui lòng kiểm tra email để lấy mã xác thực.</span>
+                            {registeredEmail && (
+                                <Link to="/verify-email" state={{ email: registeredEmail }}
+                                    style={{ color: '#15803d', fontWeight: 800, textDecoration: 'underline', marginTop: 4 }}>
+                                    Đến trang xác thực email
+                                </Link>
+                            )}
+                        </div>
+                    )}
                     {error && <div className="reg-alert-err"><span>⚠️</span> {error}</div>}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="reg-field">
-                            <input
-                                className="reg-input"
-                                type="text" name="name"
-                                placeholder="Họ và tên"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className="reg-field">
-                            <input
-                                className="reg-input"
-                                type="email" name="email"
-                                placeholder="Địa chỉ Email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className="reg-field">
-                            <input
-                                className="reg-input"
-                                type={showPass ? 'text' : 'password'}
-                                name="password"
-                                placeholder="Mật khẩu (ít nhất 6 ký tự)"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                style={{ paddingRight: 36 }}
-                            />
-                            <button
-                                type="button"
-                                className="reg-pass-toggle"
-                                onClick={() => setShowPass(p => !p)}
-                            >
-                                {showPass ? '🙈' : '👁️'}
-                            </button>
-                        </div>
+                    {!registeredEmail && (
+                        <form onSubmit={handleSubmit}>
+                            <div className="reg-field">
+                                <input
+                                    className="reg-input"
+                                    type="text" name="name"
+                                    placeholder="Họ và tên"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className="reg-field">
+                                <input
+                                    className="reg-input"
+                                    type="email" name="email"
+                                    placeholder="Địa chỉ Email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className="reg-field">
+                                <input
+                                    className="reg-input"
+                                    type={showPass ? 'text' : 'password'}
+                                    name="password"
+                                    placeholder="Mật khẩu (ít nhất 6 ký tự)"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    style={{ paddingRight: 36 }}
+                                />
+                                <button
+                                    type="button"
+                                    className="reg-pass-toggle"
+                                    onClick={() => setShowPass(p => !p)}
+                                >
+                                    {showPass ? '🙈' : '👁️'}
+                                </button>
+                            </div>
 
-                        <button className="reg-btn" disabled={loading}>
-                            {loading ? 'Đang đăng ký...' : 'Đăng ký'}
-                        </button>
-                    </form>
+                            <button className="reg-btn" disabled={loading}>
+                                {loading ? 'Đang đăng ký...' : 'Đăng ký'}
+                            </button>
+                        </form>)}
 
                     <p className="reg-foot">
                         Đã có tài khoản? <Link to="/login">Đăng nhập</Link>

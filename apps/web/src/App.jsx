@@ -4,6 +4,7 @@ import ScrollToTop from './components/ScrollToTop'
 // Auth
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import VerifyEmail from './pages/auth/VerifyEmail'
 
 // Layouts
 import UserLayout from './layouts/UserLayout'
@@ -41,6 +42,7 @@ export default function App() {
                 {/* Auth — public */}
                 <Route path='/login' element={<Login />} />
                 <Route path='/register' element={<Register />} />
+                <Route path='/verify-email' element={<VerifyEmail />} />
 
                 {/* Public pages */}
                 <Route element={<UserLayout />}>
