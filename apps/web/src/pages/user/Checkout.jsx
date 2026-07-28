@@ -17,6 +17,7 @@ const IS = { display: 'block', border: 'none', outline: 'none', background: 'non
 const PAYMENT_METHOD_UI = {
     COD: { desc: 'Trả tiền mặt khi shipper giao hàng', icon: <Truck size={20} style={IS} />, iconBg: '#FFF7ED', iconColor: '#F97316' },
     BANKING: { desc: 'Chuyển khoản thủ công qua STK', icon: <Banknote size={20} style={IS} />, iconBg: '#EEF4FF', iconColor: '#0057FF' },
+    STRIPE: { desc: 'Thanh toán online qua thẻ Visa/Mastercard (chế độ test)', icon: <CreditCard size={20} style={IS} />, iconBg: '#F5F3FF', iconColor: '#7C3AED' },
 }
 
 // Chỉ hiển thị các phương thức đã thực sự tích hợp (enabled: true)
@@ -94,6 +95,13 @@ export default function Checkout() {
                 note: form.note,
             })
             await fetchCart()
+
+            // Thanh toán qua Stripe — chuyển hướng sang trang thanh toán do Stripe dựng sẵn
+            if (res.data.checkoutUrl) {
+                window.location.href = res.data.checkoutUrl
+                return
+            }
+
             navigate(`/orders/${res.data.data._id}`)
         } catch (err) {
             setError(err.response?.data?.message || 'Đặt hàng thất bại, vui lòng thử lại!')

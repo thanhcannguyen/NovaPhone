@@ -6,6 +6,7 @@ import {
     getOrderById,
     getAllOrders,
     updateOrderStatus,
+    retryPayment
 } from '../controllers/order.controller.js'
 import { protect, restrictTo } from '../middlewares/auth.middleware.js'
 
@@ -28,5 +29,6 @@ router.get('/:id', protect, getOrderById)  // xem chi tiết đơn
 // ----------------------------------------
 router.get('/', protect, restrictTo('admin'), getAllOrders)
 router.put('/:id/status', protect, restrictTo('admin'), updateOrderStatus)
+router.post('/:id/retry-payment', protect, retryPayment)
 
 export default router

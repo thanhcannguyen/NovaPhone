@@ -126,7 +126,19 @@ export const updateOrderStatusService = async (orderId, status) => {
     if (!order) throw new Error('Không tìm thấy đơn hàng')
 
     if (order.status === ORDER_STATUS.DELIVERED) throw new Error('Không thể cập nhật đơn hàng đã giao')
-    if (order.status === ORDER_STATUS.CANCELLED) throw new Error('Không thể cập nhật đơn hàng đã hủy')
+
+    // Chặn cứng ở backend (không chỉ ẩn nút ở frontend) — đơn Stripe chưa thanh toán
+    // không được phép tiến đến bất kỳ trạng thái xử lý nào, trừ huỷ đơn.
+    const isUnpaidStripe = order.paymentMethod === 'STRIPE' && order.paymentStatus !== 'paid'
+    if (isUnpaidStripe && status !== ORDER_STATUS.CANCELLED) {
+        throw new Error('Đơn hàng thanh toán qua Stripe chưa nhận được tiền, không thể xác nhận/giao hàng')
+    }
+
+    // Chỉ cho phép 1 ngoại lệ khi đơn đã huỷ: khôi phục lại về "Chờ xác nhận"
+    // (trường hợp admin bấm huỷ nhầm). Không cho chuyển sang bất kỳ trạng thái nào khác từ cancelled.
+    if (order.status === ORDER_STATUS.CANCELLED && status !== ORDER_STATUS.PENDING) {
+        throw new Error('Đơn đã huỷ chỉ có thể khôi phục về trạng thái Chờ xác nhận')
+    }
 
     // Nếu huỷ đơn → hoàn lại stock
     if (status === ORDER_STATUS.CANCELLED && order.status !== ORDER_STATUS.CANCELLED) {
@@ -141,7 +153,44 @@ export const updateOrderStatusService = async (orderId, status) => {
         )
     }
 
+    // Nếu khôi phục đơn đã huỷ → trừ lại stock, atomic + rollback giống lúc tạo đơn,
+    // vì trong lúc đơn bị huỷ, sản phẩm có thể đã được người khác mua mất.
+    if (order.status === ORDER_STATUS.CANCELLED && status === ORDER_STATUS.PENDING) {
+        const stockResults = await Promise.all(
+            order.items.map(item =>
+                Product.findOneAndUpdate(
+                    { _id: item.product, stock: { $gte: item.quantity } },
+                    { $inc: { stock: -item.quantity } },
+                    { new: true }
+                )
+            )
+        )
+
+        const soldOutIndex = stockResults.findIndex(r => r === null)
+        if (soldOutIndex !== -1) {
+            // Rollback những sản phẩm đã trừ thành công trước đó
+            await Promise.all(
+                stockResults.map((r, idx) =>
+                    r ? Product.findByIdAndUpdate(r._id, { $inc: { stock: order.items[idx].quantity } }) : null
+                )
+            )
+            throw new Error(`Không thể khôi phục: sản phẩm "${order.items[soldOutIndex].name}" hiện không đủ tồn kho`)
+        }
+    }
+
     order.status = status
     await order.save()
+    return order
+}
+
+
+export const retryPaymentService = async (orderId, userId) => {
+    const order = await Order.findById(orderId)
+    if (!order) throw new Error('Không tìm thấy đơn hàng')
+    if (order.user.toString() !== userId.toString()) throw new Error('Bạn không có quyền thao tác đơn hàng này')
+    if (order.paymentMethod !== 'STRIPE') throw new Error('Đơn hàng này không thanh toán qua Stripe')
+    if (order.paymentStatus === 'paid') throw new Error('Đơn hàng đã được thanh toán')
+    if (order.status === 'cancelled') throw new Error('Đơn hàng đã bị huỷ, không thể thanh toán lại')
+
     return order
 }

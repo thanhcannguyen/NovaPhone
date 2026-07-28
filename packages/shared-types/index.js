@@ -37,6 +37,7 @@ export const ORDER_STATUS_LABELS = {
 export const PAYMENT_METHODS = [
     { value: 'COD', label: 'Thanh toán khi nhận hàng', enabled: true },
     { value: 'BANKING', label: 'Chuyển khoản ngân hàng', enabled: true },
+    { value: 'STRIPE', label: 'Thanh toán bằng thẻ (Stripe)', enabled: true },
     { value: 'MOMO', label: 'Ví MoMo', enabled: false },
     { value: 'VNPAY', label: 'VNPay', enabled: false },
 ]

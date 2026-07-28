@@ -1,8 +1,10 @@
 
 import express from 'express'
 import cors from 'cors'
+import path from 'path'
 
 import authRoute from './routes/auth.route.js'
+import stripeRoute from './routes/stripe.route.js'
 import userRoute from './routes/user.route.js'
 
 import categoryRoute from './routes/category.route.js'

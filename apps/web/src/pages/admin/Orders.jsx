@@ -16,7 +16,8 @@ const NEXT_STATUS = {
     confirmed: [{ value: 'shipping', label: 'Giao hàng' }, { value: 'cancelled', label: 'Huỷ đơn' }],
     shipping: [{ value: 'delivered', label: 'Đã giao' }],
     delivered: [],
-    cancelled: [],
+    // Chỉ cho phép khôi phục về "Chờ xác nhận" — phòng trường hợp admin bấm huỷ nhầm
+    cancelled: [{ value: 'pending', label: 'Khôi phục đơn' }],
 }
 
 const ITEMS_PER_PAGE = 8
@@ -102,6 +103,7 @@ export default function AdminOrders() {
                                     <th style={s.th}>Khách hàng</th>
                                     <th style={s.th}>Sản phẩm</th>
                                     <th style={s.th}>Tổng tiền</th>
+                                    <th style={s.th}>Thanh toán</th>
                                     <th style={s.th}>Trạng thái</th>
                                     <th style={s.th}>Thao tác</th>
                                 </tr>
@@ -127,16 +129,33 @@ export default function AdminOrders() {
                                             <td style={s.td}>{order.items.length} sản phẩm</td>
                                             <td style={s.td}><span style={s.amount}>{order.totalAmount.toLocaleString('vi-VN')}đ</span></td>
                                             <td style={s.td} onClick={e => e.stopPropagation()}>
+                                                {order.paymentMethod === 'STRIPE' ? (
+                                                    order.paymentStatus === 'paid'
+                                                        ? <span style={s.paidBadge}>✓ Đã thanh toán</span>
+                                                        : <span style={s.unpaidBadge}>Chưa thanh toán</span>
+                                                ) : (
+                                                    <span style={{ fontSize: 11, color: '#9CA3AF' }}>{order.paymentMethod}</span>
+                                                )}
+                                            </td>
+                                            <td style={s.td} onClick={e => e.stopPropagation()}>
                                                 <span style={{ ...s.badge, background: st?.bg, color: st?.color }}>{st?.label}</span>
                                             </td>
                                             <td style={s.td} onClick={e => e.stopPropagation()}>
-                                                {nextActions.map(action => (
+                                                {/* Chặn xác nhận/giao đơn Stripe khi chưa thực sự nhận được tiền —
+                                                    vẫn cho phép Huỷ đơn bình thường. */}
+                                                {(order.paymentMethod === 'STRIPE' && order.paymentStatus !== 'paid'
+                                                    ? nextActions.filter(a => a.value === 'cancelled')
+                                                    : nextActions
+                                                ).map(action => (
                                                     <button key={action.value} className='admin-next-btn'
                                                         style={{ background: action.value === 'cancelled' ? '#fde8e8' : '#EEF4FF', color: action.value === 'cancelled' ? '#DC2626' : '#0040CC', marginBottom: 4 }}
                                                         onClick={() => handleUpdateStatus(order._id, action.value)}>
                                                         {action.label}
                                                     </button>
                                                 ))}
+                                                {order.paymentMethod === 'STRIPE' && order.paymentStatus !== 'paid' && nextActions.length > 0 && (
+                                                    <div style={{ fontSize: 10, color: '#F97316', marginTop: 2 }}>Chưa nhận tiền</div>
+                                                )}
                                             </td>
                                         </tr>
                                     )
@@ -165,17 +184,27 @@ export default function AdminOrders() {
                                 <div style={s.sectionLabel}>Trạng thái</div>
                                 {(() => {
                                     const st = STATUS_MAP[selectedOrder.status]
-                                    const actions = NEXT_STATUS[selectedOrder.status] || []
+                                    const isUnpaidStripe = selectedOrder.paymentMethod === 'STRIPE' && selectedOrder.paymentStatus !== 'paid'
+                                    const actions = isUnpaidStripe
+                                        ? (NEXT_STATUS[selectedOrder.status] || []).filter(a => a.value === 'cancelled')
+                                        : (NEXT_STATUS[selectedOrder.status] || [])
                                     return (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                                            <span style={{ ...s.badge, background: st?.bg, color: st?.color, fontSize: 13, padding: '5px 14px' }}>{st?.label}</span>
-                                            {actions.map(a => (
-                                                <button key={a.value} className='admin-next-btn'
-                                                    style={{ background: a.value === 'cancelled' ? '#fde8e8' : '#0057FF', color: a.value === 'cancelled' ? '#DC2626' : '#fff', padding: '7px 14px', fontWeight: 600 }}
-                                                    onClick={() => handleUpdateStatus(selectedOrder._id, a.value)}>
-                                                    {a.label}
-                                                </button>
-                                            ))}
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                                <span style={{ ...s.badge, background: st?.bg, color: st?.color, fontSize: 13, padding: '5px 14px' }}>{st?.label}</span>
+                                                {actions.map(a => (
+                                                    <button key={a.value} className='admin-next-btn'
+                                                        style={{ background: a.value === 'cancelled' ? '#fde8e8' : '#0057FF', color: a.value === 'cancelled' ? '#DC2626' : '#fff', padding: '7px 14px', fontWeight: 600 }}
+                                                        onClick={() => handleUpdateStatus(selectedOrder._id, a.value)}>
+                                                        {a.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {isUnpaidStripe && (NEXT_STATUS[selectedOrder.status] || []).length > 0 && (
+                                                <div style={{ marginTop: 8, fontSize: 12, color: '#F97316' }}>
+                                                    ⚠️ Đơn thanh toán qua Stripe nhưng chưa nhận được tiền — chỉ có thể huỷ đơn.
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })()}
@@ -188,7 +217,17 @@ export default function AdminOrders() {
                                     <div style={s.infoRow}><span style={s.infoKey}>Họ tên</span><span style={s.infoVal}>{selectedOrder.shippingInfo?.fullName}</span></div>
                                     <div style={s.infoRow}><span style={s.infoKey}>SĐT</span><span style={s.infoVal}>{selectedOrder.shippingInfo?.phone}</span></div>
                                     <div style={s.infoRow}><span style={s.infoKey}>Địa chỉ</span><span style={s.infoVal}>{selectedOrder.shippingInfo?.address}</span></div>
-                                    <div style={s.infoRow}><span style={s.infoKey}>Thanh toán</span><span style={s.infoVal}>{selectedOrder.paymentMethod}</span></div>
+                                    <div style={s.infoRow}>
+                                        <span style={s.infoKey}>Thanh toán</span>
+                                        <span style={s.infoVal}>
+                                            {selectedOrder.paymentMethod}
+                                            {selectedOrder.paymentMethod === 'STRIPE' && (
+                                                selectedOrder.paymentStatus === 'paid'
+                                                    ? <span style={{ ...s.paidBadge, marginLeft: 8 }}>✓ Đã thanh toán</span>
+                                                    : <span style={{ ...s.unpaidBadge, marginLeft: 8 }}>Chưa thanh toán</span>
+                                            )}
+                                        </span>
+                                    </div>
                                     {selectedOrder.note && <div style={s.infoRow}><span style={s.infoKey}>Ghi chú</span><span style={s.infoVal}>{selectedOrder.note}</span></div>}
                                 </div>
                             </div>
@@ -254,4 +293,6 @@ const s = {
     totalRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderTop: '2px solid #E5E7EB' },
     totalLabel: { fontSize: 14, fontWeight: 600, color: '#0A0A0A' },
     totalAmount: { fontSize: 20, fontWeight: 800, color: '#0057FF' },
+    paidBadge: { display: 'inline-block', fontSize: 11, fontWeight: 700, color: '#15803D', background: '#e7f8ec', padding: '2px 9px', borderRadius: 20 },
+    unpaidBadge: { display: 'inline-block', fontSize: 11, fontWeight: 700, color: '#DC2626', background: '#fde8e8', padding: '2px 9px', borderRadius: 20 },
 }

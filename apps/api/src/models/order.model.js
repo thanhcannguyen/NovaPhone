@@ -67,6 +67,15 @@ const orderSchema = new mongoose.Schema({
         enum: PAYMENT_METHOD_VALUES,
         default: 'COD',
     },
+    // Riêng cho thanh toán online (Stripe) — theo dõi đã thanh toán thành công chưa,
+    // độc lập với `status` (trạng thái giao hàng). COD/Banking không dùng field này.
+    paymentStatus: {
+        type: String,
+        enum: ['unpaid', 'paid'],
+        default: 'unpaid',
+    },
+    stripeSessionId: { type: String, default: null },
+    stripePaymentIntentId: { type: String, default: null },
     // Snapshot thông tin giao hàng
     shippingInfo: {
         fullName: { type: String, required: true },

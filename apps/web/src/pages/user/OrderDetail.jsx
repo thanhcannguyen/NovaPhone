@@ -1,7 +1,7 @@
 // src/pages/user/OrderDetail.jsx
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getOrderByIdApi } from '../../api/orderApi'
+import { getOrderByIdApi, retryPaymentApi } from '../../api/orderApi'
 
 const STATUS_MAP = {
     pending: { label: 'Chờ xác nhận', bg: '#fef3e2', color: '#b45309' },
@@ -18,6 +18,18 @@ export default function OrderDetail() {
     const [order, setOrder] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [retrying, setRetrying] = useState(false)
+
+    const handleRetryPayment = async () => {
+        setRetrying(true)
+        try {
+            const res = await retryPaymentApi(order._id)
+            window.location.href = res.data.checkoutUrl
+        } catch (err) {
+            alert(err.response?.data?.message || 'Không thể tạo lại phiên thanh toán')
+            setRetrying(false)
+        }
+    }
 
     useEffect(() => {
         getOrderByIdApi(id)
@@ -32,6 +44,10 @@ export default function OrderDetail() {
 
     const status = STATUS_MAP[order.status] || { label: order.status, bg: '#f0f0f0', color: '#888' }
     const currentStep = TIMELINE.indexOf(order.status)
+    // Chỉ ép 2 cột cao bằng nhau khi danh sách sản phẩm đủ dài để cần cuộn (khớp với
+    // ngưỡng maxHeight: 264 của itemScroll — ~3 sản phẩm là vừa đủ khung đó).
+    // Ít sản phẩm hơn thì để mỗi cột tự nhiên theo đúng nội dung, tránh khoảng trắng thừa.
+    const isLongList = order.items.length > 3
 
     return (
         <div style={s.page}>
@@ -92,10 +108,10 @@ export default function OrderDetail() {
                 )}
 
                 {/* Layout — 2 cột desktop, 1 cột mobile */}
-                <div className='order-detail-layout' style={s.layout}>
+                <div className='order-detail-layout' style={{ ...s.layout, alignItems: isLongList ? 'stretch' : 'start' }}>
 
                     {/* Sản phẩm */}
-                    <div style={{ ...s.card, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div style={isLongList ? { ...s.card, display: 'flex', flexDirection: 'column', height: '100%' } : s.card}>
                         <h3 style={s.cardTitle}>Sản phẩm đã đặt</h3>
                         <div className="od-item-scroll" style={s.itemScroll}>
                             {order.items.map((item, idx) => (
@@ -128,7 +144,7 @@ export default function OrderDetail() {
 
                     {/* Cột phải */}
                     <div>
-                        <div style={s.card}>
+                        <div style={isLongList ? { ...s.card, display: 'flex', flexDirection: 'column', height: '100%' } : s.card}>
                             <h3 style={s.cardTitle}>Thông tin nhận hàng</h3>
                             {[
                                 { label: 'Họ tên', value: order.shippingInfo?.fullName },
@@ -146,6 +162,14 @@ export default function OrderDetail() {
                             <h3 style={s.cardTitle}>Thông tin thanh toán</h3>
                             {[
                                 { label: 'Phương thức', value: order.paymentMethod },
+                                // Chỉ hiện trạng thái thanh toán cho đơn Stripe — COD/Chuyển khoản
+                                // không cần theo dõi paid/unpaid vì tiền không qua cổng thanh toán online.
+                                ...(order.paymentMethod === 'STRIPE' ? [{
+                                    label: 'Trạng thái thanh toán',
+                                    value: order.paymentStatus === 'paid'
+                                        ? <span style={s.paidBadge}>✓ Đã thanh toán</span>
+                                        : <span style={s.unpaidBadge}>Chưa thanh toán</span>,
+                                }] : []),
                                 { label: 'Phí giao hàng', value: <span style={{ color: '#1b7f3a', fontWeight: 600 }}>Miễn phí</span> },
                             ].map(row => (
                                 <div key={row.label} style={s.infoRow}>
@@ -154,6 +178,16 @@ export default function OrderDetail() {
                                 </div>
                             ))}
                             {order.note && <div style={{ marginTop: 8, fontSize: 12, color: '#0A0A0A' }}><span style={s.infoLabel}>Ghi chú: </span>{order.note}</div>}
+
+                            {/* Cảnh báo + link quay lại thanh toán nếu lỡ thoát giữa chừng */}
+                            {order.paymentMethod === 'STRIPE' && order.paymentStatus !== 'paid' && order.status !== 'cancelled' && (
+                                <div style={s.unpaidAlert}>
+                                    ⚠️ Đơn hàng chưa được thanh toán. Nếu bạn đã thoát khỏi trang thanh toán trước khi hoàn tất, đơn hàng sẽ không được xử lý cho đến khi thanh toán thành công.
+                                    <button style={s.retryPayBtn} disabled={retrying} onClick={handleRetryPayment}>
+                                        {retrying ? 'Đang chuyển hướng...' : 'Quay lại thanh toán '}
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <button className="od-btn-primary" style={s.menuBtn} onClick={() => navigate('/products')}>Tiếp tục mua hàng</button>
@@ -184,7 +218,7 @@ const s = {
     timelineDot: { width: 14, height: 14, borderRadius: '50%', marginBottom: 8, zIndex: 1 },
     timelineLabel: { fontSize: 11, textAlign: 'center', lineHeight: 1.4, color: '#4a5568' },
     timelineLine: { position: 'absolute', top: 7, left: '50%', width: '100%', height: 2, zIndex: 0 },
-    layout: { display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16, alignItems: 'stretch' },
+    layout: { display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16 },
     card: { background: '#fff', borderRadius: 14, border: '1px solid #D1D5DB', boxShadow: '0 1px 6px rgba(26,115,232,0.05)', padding: '20px', marginBottom: 14 },
     cardTitle: { fontSize: 14, fontWeight: 700, color: '#0A0A0A', margin: '0 0 14px', paddingBottom: 10, borderBottom: '1px solid #F8F9FB' },
     itemScroll: { overflowY: 'auto', overflowX: 'hidden', flex: '1 1 auto', minHeight: 0, maxHeight: 264 },
@@ -200,4 +234,8 @@ const s = {
     infoValue: { fontSize: 13, fontWeight: 600, color: '#0A0A0A', textAlign: 'right' },
     menuBtn: { width: '100%', padding: '13px', background: '#0057FF', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'background 0.15s' },
     historyBtn: { width: '100%', padding: '13px', background: '#fff', color: '#0A0A0A', border: '1.5px solid #D1D5DB', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', marginTop: 10, transition: 'all 0.15s' },
+    paidBadge: { display: 'inline-block', fontSize: 12, fontWeight: 700, color: '#15803D', background: '#e7f8ec', padding: '3px 10px', borderRadius: 20 },
+    unpaidBadge: { display: 'inline-block', fontSize: 12, fontWeight: 700, color: '#DC2626', background: '#fde8e8', padding: '3px 10px', borderRadius: 20 },
+    unpaidAlert: { marginTop: 12, padding: '10px 12px', background: '#FFF7ED', border: '1px solid #FED7AA', borderLeft: '3px solid #F97316', borderRadius: 8, fontSize: 12, color: '#92400E', lineHeight: 1.5 },
+    retryPayBtn: { display: 'block', marginTop: 8, background: '#F97316', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
 }

@@ -21,3 +21,5 @@ export const getAllOrdersApi = () => {
 export const updateOrderStatusApi = (id, status) => {
     return axiosInstance.put(`/orders/${id}/status`, { status })
 }
+
+export const retryPaymentApi = (orderId) => axiosInstance.post(`/orders/${orderId}/retry-payment`)

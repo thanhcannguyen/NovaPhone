@@ -5,7 +5,9 @@ import {
     getOrderByIdService,
     getAllOrdersService,
     updateOrderStatusService,
+    retryPaymentService,
 } from '../services/order.service.js'
+import { createCheckoutSessionForOrder, retryCheckoutSessionForOrder } from '../services/stripe.service.js'
 
 // ================================================================
 // CONTROLLER 1 — Tạo đơn hàng
@@ -24,10 +26,22 @@ export const createOrder = async (req, res) => {
 
         const order = await createOrderService(req.user._id, { paymentMethod, shippingInfo, note })
 
+        // Nếu thanh toán qua Stripe, tạo phiên thanh toán ngay và trả link để frontend chuyển hướng.
+        // Đơn hàng vẫn được tạo trước (status: pending, paymentStatus: unpaid) — webhook sẽ cập nhật
+        // paymentStatus thành 'paid' sau khi khách thanh toán thành công trên trang Stripe.
+        let checkoutUrl = null
+        if (paymentMethod === 'STRIPE') {
+            const session = await createCheckoutSessionForOrder(order)
+            order.stripeSessionId = session.id
+            await order.save()
+            checkoutUrl = session.url
+        }
+
         res.status(201).json({
             success: true,
             message: 'Đặt hàng thành công',
             data: order,
+            checkoutUrl,
         })
 
     } catch (error) {
@@ -122,6 +136,27 @@ export const updateOrderStatus = async (req, res) => {
         console.error('Lỗi updateOrderStatus:', error)
         const status = error.message.includes('tìm thấy') ? 404
             : error.message.includes('hợp lệ') || error.message.includes('thể') ? 400 : 500
+        res.status(status).json({ message: error.message })
+    }
+}
+
+
+// ================================================================
+// CONTROLLER 6 — Tạo lại phiên thanh toán Stripe cho đơn chưa trả tiền
+// POST /api/orders/:id/retry-payment
+// ================================================================
+export const retryPayment = async (req, res) => {
+    try {
+        const order = await retryPaymentService(req.params.id, req.user._id)
+        const session = await retryCheckoutSessionForOrder(order)
+        order.stripeSessionId = session.id
+        await order.save()
+
+        res.status(200).json({ success: true, checkoutUrl: session.url })
+    } catch (error) {
+        console.error('Lỗi retryPayment:', error)
+        const status = error.message.includes('quyền') ? 403
+            : error.message.includes('tìm thấy') ? 404 : 400
         res.status(status).json({ message: error.message })
     }
 }
