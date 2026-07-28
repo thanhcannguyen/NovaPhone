@@ -30,7 +30,11 @@ export default function Dashboard() {
     }, [])
 
     const orders = data.orders
-    const totalRevenue = orders.filter(o => o.status === 'delivered').reduce((s, o) => s + o.totalAmount, 0)
+    // Loại trừ đơn Stripe chưa thanh toán khỏi doanh thu — phòng thủ thêm 1 lớp
+    // dù backend đã chặn không cho đơn này lên trạng thái 'delivered' ở nguồn.
+    const totalRevenue = orders
+        .filter(o => o.status === 'delivered' && !(o.paymentMethod === 'STRIPE' && o.paymentStatus !== 'paid'))
+        .reduce((s, o) => s + o.totalAmount, 0)
     const pendingCount = orders.filter(o => o.status === 'pending').length
     const orderByStatus = Object.keys(STATUS_MAP).reduce((a, k) => ({ ...a, [k]: orders.filter(o => o.status === k).length }), {})
     const totalPages = Math.ceil(orders.length / ITEMS_PER_PAGE)
