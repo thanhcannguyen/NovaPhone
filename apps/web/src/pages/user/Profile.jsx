@@ -2,7 +2,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { updateProfile } from '../../api/userApi'
+import { updateProfile, uploadAvatar } from '../../api/userApi'
+import { getFileUrl } from '../../utils/getFileUrl'
 import {
     User, ShoppingBag, Smartphone, LogOut,
     Pencil, Save, CheckCircle, AlertCircle,
@@ -21,7 +22,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState('')
     const [error, setError] = useState('')
-    const [avatarPreview, setAvatarPreview] = useState(null)
+    const [avatarUploading, setAvatarUploading] = useState(false)
     const [form, setForm] = useState({
         name: user?.name || '', phone: user?.phone || '',
         street: user?.address?.street || '',
@@ -29,13 +30,23 @@ export default function Profile() {
         city: user?.address?.city || '',
     })
 
-    // Xem trước ảnh đại diện tạm thời (F5 sẽ mất do chưa có API lưu backend)
-    const handleAvatarChange = (e) => {
+    // Upload ảnh đại diện thật lên server, lưu lại đường dẫn vào tài khoản
+    const handleAvatarChange = async (e) => {
         const file = e.target.files?.[0]
         if (!file) return
         if (!file.type.startsWith('image/')) return setError('Vui lòng chọn file ảnh')
-        const url = URL.createObjectURL(file)
-        setAvatarPreview(url)
+        if (file.size > 5 * 1024 * 1024) return setError('Ảnh không được vượt quá 5MB')
+
+        setAvatarUploading(true); setError(''); setSuccess('')
+        try {
+            const res = await uploadAvatar(file)
+            login(localStorage.getItem('token'), res.data.data)
+            setSuccess('Cập nhật ảnh đại diện thành công!')
+        } catch (err) {
+            setError(err.response?.data?.message || 'Tải ảnh lên thất bại')
+        } finally {
+            setAvatarUploading(false)
+        }
     }
 
     const handleChange = (e) => {
@@ -171,11 +182,11 @@ export default function Profile() {
                     <div className="profile-card">
                         <div className="profile-avatar-wrap">
                             <div className="profile-avatar">
-                                {avatarPreview ? <img src={avatarPreview} alt="Avatar" /> : initials}
+                                {user?.avatar ? <img src={getFileUrl(user.avatar)} alt="Avatar" /> : initials}
                             </div>
-                            <label className="avatar-upload-btn">
+                            <label className="avatar-upload-btn" style={{ opacity: avatarUploading ? 0.6 : 1, pointerEvents: avatarUploading ? 'none' : 'auto' }}>
                                 <Pencil size={12} style={IS} />
-                                <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
+                                <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} disabled={avatarUploading} />
                             </label>
                         </div>
                         <div className="profile-name">{user?.name}</div>

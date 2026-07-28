@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import Topbar from '../../components/admin/Topbar'
 import Pagination from '../../components/admin/Pagination'
 import { getAllUsers } from '../../api/userApi'
-
+import { getFileUrl } from '../../utils/getFileUrl'
 const ITEMS_PER_PAGE = 8
 
 function useIsMobile() {
@@ -276,8 +276,8 @@ export default function Users() {
                                         {paginated.map(user => (
                                             <div key={user._id} style={s.userCard}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                                                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: avatarColor(user.name), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
-                                                        {initials(user.name)}
+                                                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: avatarColor(user.name), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0, overflow: 'hidden' }}>
+                                                        {user.avatar ? <img src={getFileUrl(user.avatar)} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name)}
                                                     </div>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
                                                         <div style={{ fontWeight: 600, fontSize: 14, color: '#0A0A0A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
@@ -308,8 +308,7 @@ export default function Users() {
                                                     <tr key={user._id} className='admin-tr'>
                                                         <td style={s.td}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                                <div style={{ width: 34, height: 34, borderRadius: '50%', background: avatarColor(user.name), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{initials(user.name)}</div>
-                                                                <span style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>{user.name}</span>
+                                                                <div style={{ width: 34, height: 34, borderRadius: '50%', background: avatarColor(user.name), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0, overflow: 'hidden' }}>{user.avatar ? <img src={getFileUrl(user.avatar)} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials(user.name)}</div>                                                                <span style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>{user.name}</span>
                                                             </div>
                                                         </td>
                                                         <td style={{ ...s.td, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</td>

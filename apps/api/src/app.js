@@ -19,7 +19,17 @@ import aiRoute from './routes/ai.route.js'
 
 const app = express()
 app.use(cors())
+
+// ⚠️ QUAN TRỌNG: route webhook Stripe phải đăng ký TRƯỚC express.json() —
+// nếu để sau, express.json() sẽ đọc và "tiêu thụ" hết phần body thô trước khi
+// đến route này, khiến việc xác thực chữ ký Stripe luôn thất bại.
+app.use('/api/stripe', stripeRoute)
+
 app.use(express.json())
+
+// Cho phép truy cập ảnh đã upload qua URL, ví dụ:
+// http://localhost:5000/uploads/avatars/xxx.jpg
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 // ...
 app.use('/api/auth', authRoute)

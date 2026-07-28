@@ -1,7 +1,8 @@
 
 
 import User from '../models/user.model.js'
-
+import fs from 'fs'
+import path from 'path'
 
 // CONTROLLER 1 — Lấy thông tin cá nhân
 // GET /api/users/profile
@@ -75,6 +76,42 @@ export const updateProfile = async (req, res) => {
         })
     } catch (error) {
         console.error('Lỗi updateProfile:', error)
+        res.status(500).json({ message: 'Lỗi server' })
+    }
+}
+
+
+
+// CONTROLLER 4 — Upload/cập nhật ảnh đại diện
+// PUT /api/users/avatar (multipart/form-data, field name: "avatar")
+export const updateAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Vui lòng chọn file ảnh' })
+        }
+
+        // Xóa ảnh cũ trên ổ đĩa (nếu có) để tránh rác file tích tụ theo thời gian
+        const oldAvatar = req.user.avatar
+        if (oldAvatar) {
+            const oldPath = path.join(process.cwd(), oldAvatar)
+            fs.unlink(oldPath, () => { }) // bỏ qua lỗi nếu file không tồn tại
+        }
+
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { avatar: avatarUrl },
+            { new: true }
+        )
+
+        res.status(200).json({
+            success: true,
+            message: 'Cập nhật ảnh đại diện thành công',
+            data: updatedUser,
+        })
+    } catch (error) {
+        console.error('Lỗi updateAvatar:', error)
         res.status(500).json({ message: 'Lỗi server' })
     }
 }

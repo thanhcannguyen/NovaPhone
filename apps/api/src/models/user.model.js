@@ -64,6 +64,13 @@ const userSchema = new mongoose.Schema({
         default: true
     },
 
+    // Đường dẫn ảnh đại diện (do người dùng tự upload) — lưu dạng URL tương đối,
+    // ví dụ /uploads/avatars/abc123.jpg — ghép với domain backend khi hiển thị ở frontend
+    avatar: {
+        type: String,
+        default: null
+    },
+
     // Trạng thái xác minh email
     // false = user chưa verify email
     // true  = đã xác minh (được coi là tài khoản hợp lệ)
