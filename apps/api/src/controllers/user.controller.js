@@ -1,8 +1,6 @@
 
 
 import User from '../models/user.model.js'
-import fs from 'fs'
-import path from 'path'
 
 // CONTROLLER 1 — Lấy thông tin cá nhân
 // GET /api/users/profile
@@ -90,14 +88,9 @@ export const updateAvatar = async (req, res) => {
             return res.status(400).json({ message: 'Vui lòng chọn file ảnh' })
         }
 
-        // Xóa ảnh cũ trên ổ đĩa (nếu có) để tránh rác file tích tụ theo thời gian
-        const oldAvatar = req.user.avatar
-        if (oldAvatar) {
-            const oldPath = path.join(process.cwd(), oldAvatar)
-            fs.unlink(oldPath, () => { }) // bỏ qua lỗi nếu file không tồn tại
-        }
-
-        const avatarUrl = `/uploads/avatars/${req.file.filename}`
+        // req.file.path giờ là URL đầy đủ trên Cloudinary (không phải đường dẫn ổ đĩa local),
+        // ví dụ: https://res.cloudinary.com/xxx/image/upload/v.../novaphone/avatars/abc.jpg
+        const avatarUrl = req.file.path
 
         const updatedUser = await User.findByIdAndUpdate(
             req.user._id,

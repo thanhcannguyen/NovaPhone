@@ -29,9 +29,7 @@ app.use('/api/stripe', stripeRoute)
 
 app.use(express.json())
 
-// Cho phép truy cập ảnh đã upload qua URL, ví dụ:
-// http://localhost:5000/uploads/avatars/xxx.jpg
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+
 
 // ...
 app.use('/api/auth', authRoute)

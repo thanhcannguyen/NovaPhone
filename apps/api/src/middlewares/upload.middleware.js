@@ -1,21 +1,33 @@
 
+import { v2 as cloudinary } from 'cloudinary'
+import { CloudinaryStorage } from 'multer-storage-cloudinary'
 import multer from 'multer'
-import path from 'path'
-import fs from 'fs'
 
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'avatars')
-
-// Tự tạo thư mục nếu chưa tồn tại (tránh lỗi lúc chạy lần đầu trên máy mới/server mới)
-if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+// Khởi tạo "lười" — cùng nguyên tắc đã áp dụng cho Gmail/Stripe trước đây,
+// tránh lỗi thiếu credentials do thứ tự import chạy trước khi .env kịp nạp.
+let configured = false
+const ensureCloudinaryConfigured = () => {
+    if (configured) return
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+    })
+    configured = true
 }
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-    filename: (req, file, cb) => {
-        // Đặt tên file duy nhất: <userId>-<thời điểm>.<đuôi file gốc>
-        const ext = path.extname(file.originalname)
-        cb(null, `${req.user._id}-${Date.now()}${ext}`)
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: async (req, file) => {
+        // Cấu hình Cloudinary ngay tại đây (chạy mỗi khi có request upload thật),
+        // không phải lúc module được import — đảm bảo .env đã chắc chắn nạp xong.
+        ensureCloudinaryConfigured()
+        return {
+            folder: 'novaphone/avatars',
+            public_id: `${req.user._id}`,
+            allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+            transformation: [{ width: 500, height: 500, crop: 'fill', gravity: 'face' }],
+        }
     },
 })
 
@@ -29,5 +41,5 @@ const fileFilter = (req, file, cb) => {
 export const uploadAvatar = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 }, // giới hạn 5MB/ảnh
+    limits: { fileSize: 5 * 1024 * 1024 },
 })
