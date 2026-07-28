@@ -8,7 +8,16 @@ export const checkCanRate = (productId) =>
     axiosInstance.get(`/products/${productId}/reviews/can-review`)
 
 export const submitReview = (productId, payload) =>
-    axiosInstance.post(`/products/${productId}/reviews`, payload) // payload: { rating?, comment }
+    axiosInstance.post(`/products/${productId}/reviews`, payload)
+
+export const submitReply = (reviewId, comment) =>
+    axiosInstance.post(`/reviews/${reviewId}/reply`, { comment })
 
 export const toggleReviewHelpful = (reviewId) =>
     axiosInstance.patch(`/reviews/${reviewId}/helpful`)
+
+export const deleteReviewApi = (reviewId) =>
+    axiosInstance.delete(`/reviews/${reviewId}`)
+
+export const getAllReviewsAdmin = () =>
+    axiosInstance.get('/reviews')

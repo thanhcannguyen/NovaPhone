@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getProductById } from '../../api/productApi'
 import { addToCartApi } from '../../api/cartApi'
-import { getProductReviews, checkCanRate, submitReview as submitReviewApi, toggleReviewHelpful } from '../../api/reviewApi'
+import { getProductReviews, checkCanRate, submitReview as submitReviewApi, submitReply, toggleReviewHelpful } from '../../api/reviewApi'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -18,19 +18,22 @@ const IS = { display: 'block', border: 'none', outline: 'none', background: 'non
 // Star rating display
 function Stars({ rating = 0, size = 14, interactive = false, onChange }) {
     const [hover, setHover] = useState(0)
-    const display = interactive && hover ? hover : rating
+    const display = interactive && hover ? hover : Number(rating) || 0
     return (
-        <span style={{ display: 'inline-flex', gap: 2 }}
+        <span className="pd-stars-group" style={{ display: 'inline-flex', gap: 2 }}
             onMouseLeave={interactive ? () => setHover(0) : undefined}>
-            {[1, 2, 3, 4, 5].map(i => (
-                <Star key={i} size={size}
-                    style={{ ...IS, color: '#F59E0B', cursor: interactive ? 'pointer' : 'default' }}
-                    fill={i <= Math.round(display) ? '#F59E0B' : 'none'}
-                    strokeWidth={1.8}
-                    onMouseEnter={interactive ? () => setHover(i) : undefined}
-                    onClick={interactive ? () => onChange?.(i) : undefined}
-                />
-            ))}
+            {[1, 2, 3, 4, 5].map(i => {
+                const filled = i <= Math.round(display)
+                return (
+                    <span key={i} className={`pd-star-unit${filled ? ' filled' : ''}`}
+                        style={{ width: size, height: size, cursor: interactive ? 'pointer' : 'default' }}
+                        onMouseEnter={interactive ? () => setHover(i) : undefined}
+                        onClick={interactive ? () => onChange?.(i) : undefined}
+                    >
+                        <Star size={size} style={{ ...IS, width: '100%', height: '100%' }} strokeWidth={2} />
+                    </span>
+                )
+            })}
         </span>
     )
 }
@@ -69,6 +72,12 @@ const SPEC_ROWS = [
 ]
 
 const RATING_FILTERS = [5, 4, 3, 2, 1]
+const AVATAR_COLORS = ['#0057FF', '#16A34A', '#7C3AED', '#EF4444', '#0EA5E9', '#DB2777', '#F59E0B']
+const avatarColor = (name = '') => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length] || '#0057FF'
+const getInitials = (name = '') => {
+    const parts = name.trim().split(' ')
+    return parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : name.slice(0, 2).toUpperCase()
+}
 
 export default function ProductDetail() {
     const { id } = useParams()
@@ -93,6 +102,10 @@ export default function ProductDetail() {
     const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' })
     const [canRate, setCanRate] = useState(null) // null = chưa xác định, true/false sau khi kiểm tra
     const [submittingReview, setSubmittingReview] = useState(false)
+    const [replyingTo, setReplyingTo] = useState(null) // id của review đang mở form trả lời
+    const [replyText, setReplyText] = useState('')
+    const [submittingReply, setSubmittingReply] = useState(false)
+    const [expandedThreads, setExpandedThreads] = useState({}) // { [reviewId]: true } khi bấm "Xem thêm phản hồi"
 
     useEffect(() => {
         window.scrollTo(0, 0)
@@ -173,6 +186,23 @@ export default function ProductDetail() {
         }
     }
 
+    const handleSubmitReply = async (reviewId) => {
+        if (!isAuthenticated) { navigate('/login'); return }
+        if (!replyText.trim()) return
+        setSubmittingReply(true)
+        try {
+            await submitReply(reviewId, replyText.trim())
+            setReplyText('')
+            setReplyingTo(null)
+            loadReviews()
+            showToast('✅ Đã gửi trả lời!')
+        } catch (err) {
+            showToast('⚠️ ' + (err.response?.data?.message || 'Lỗi gửi trả lời'))
+        } finally {
+            setSubmittingReply(false)
+        }
+    }
+
     const handleToggleHelpful = async (reviewId) => {
         if (!isAuthenticated) { navigate('/login'); return }
         try {
@@ -224,7 +254,9 @@ export default function ProductDetail() {
             <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
             .pd-page svg { display:block!important; border:none!important; outline:none!important; box-shadow:none!important; background:transparent!important; overflow:visible!important; }
-
+            .pd-star-unit { display: inline-flex; }
+            .pd-star-unit svg { color: #F59E0B; fill: #fff; }
+            .pd-star-unit.filled svg { fill: #F59E0B; }
             /* Breadcrumb */
             .pd-breadcrumb { background:#fff; border-bottom:1px solid #E5E7EB; padding:10px 0; font-size:0.82rem; color:#6B7280; }
             .pd-breadcrumb-inner { max-width:1280px; margin:0 auto; padding:0 24px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
@@ -344,8 +376,19 @@ export default function ProductDetail() {
             .pd-rev-submit { background:#EF4444; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; }
             .pd-rev-submit:hover { background:#DC2626; }
 
-            .pd-rev-item { padding:16px 0; border-bottom:1px solid #E5E7EB; }
+            .pd-rev-empty { text-align:center; padding:30px 0; color:#9CA3AF; font-size:0.88rem; }
+
+            /* Layout kiểu YouTube — avatar tròn + nội dung bên phải */
+            .pd-rev-item { padding:16px 0; border-bottom:1px solid #E5E7EB; display:flex; gap:12px; align-items:flex-start; }
             .pd-rev-item:last-child { border-bottom:none; }
+            .pd-rev-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:0.82rem; flex-shrink:0; }
+            .pd-rev-body { flex:1; min-width:0; }
+            .pd-reply-row { display:flex; gap:10px; align-items:flex-start; }
+            .pd-reply-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:0.72rem; flex-shrink:0; }
+            .pd-reply-body { flex:1; min-width:0; }
+            .pd-show-more-btn { background:none; border:none; color:#0057FF; font-size:0.8rem; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; padding:0; display:flex; align-items:center; gap:5px; margin-top:4px; }
+            .pd-show-more-btn:hover { text-decoration:underline; }
+
             .pd-rev-item-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
             .pd-rev-name { font-weight:700; font-size:0.88rem; color:#0A0A0A; }
             .pd-rev-verified { font-size:0.72rem; color:#EF4444; display:flex; align-items:center; gap:3px; }
@@ -355,7 +398,19 @@ export default function ProductDetail() {
             .pd-rev-action-btn { display:flex; align-items:center; gap:5px; background:none; border:none; color:#6B7280; font-size:0.78rem; cursor:pointer; font-family:'Nunito',sans-serif; padding:0; }
             .pd-rev-action-btn:hover { color:#0057FF; }
             .pd-rev-action-btn.active { color:#0057FF; font-weight:700; }
-            .pd-rev-empty { text-align:center; padding:30px 0; color:#9CA3AF; font-size:0.88rem; }
+            .pd-reply-list { margin: 12px 0 0 0; padding-left: 16px; border-left: 2px solid #E5E7EB; display: flex; flex-direction: column; gap: 14px; }
+            .pd-reply-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+            .pd-reply-name { font-weight: 700; font-size: 0.85rem; color: #0A0A0A; }
+            .pd-reply-badge-admin { font-size: 0.68rem; font-weight: 800; color: #fff; background: #0057FF; padding: 2px 8px; border-radius: 100px; }
+            .pd-reply-date { font-size: 0.72rem; color: #9CA3AF; margin-left: auto; }
+            .pd-reply-comment { font-size: 0.84rem; color: #374151; line-height: 1.55; }
+            .pd-reply-btn { background: none; border: none; color: #6B7280; font-size: 0.78rem; cursor: pointer; font-family: 'Nunito',sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; }
+            .pd-reply-btn:hover { color: #0057FF; }
+            .pd-reply-form { margin-top: 10px; display: flex; gap: 8px; }
+            .pd-reply-input { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; font-family: 'Nunito',sans-serif; outline: none; }
+            .pd-reply-input:focus { border-color: #0057FF; }
+            .pd-reply-send { background: #0057FF; color: #fff; border: none; padding: 0 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: 'Nunito',sans-serif; }
+            .pd-reply-send:hover { background: #0040CC; }
 
             /* Responsive */
             @media (max-width:1100px) {
@@ -670,31 +725,107 @@ export default function ProductDetail() {
                                 {filteredReviews.length === 0 ? (
                                     <div className="pd-rev-empty">Chưa có đánh giá nào phù hợp.</div>
                                 ) : (
-                                    filteredReviews.map(r => (
-                                        <div key={r._id} className="pd-rev-item">
-                                            <div className="pd-rev-item-head">
-                                                <span className="pd-rev-name">{r.name}</span>
-                                                {r.rating ? <Stars rating={r.rating} size={13} /> : (
-                                                    <span style={{ fontSize: '0.75rem', color: '#9CA3AF', fontStyle: 'italic' }}>Bình luận</span>
-                                                )}
-                                                {r.verifiedPurchase && (
-                                                    <span className="pd-rev-verified"><CheckCircle size={12} style={IS} /> Đã mua hàng</span>
-                                                )}
-                                                <span className="pd-rev-date">{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+                                    filteredReviews.map(r => {
+                                        const showAll = expandedThreads[r._id]
+                                        const visibleReplies = showAll ? r.replies : (r.replies || []).slice(0, 3)
+                                        const hiddenCount = (r.replies?.length || 0) - visibleReplies.length
+
+                                        return (
+                                            <div key={r._id} className="pd-rev-item">
+                                                <div className="pd-rev-avatar" style={{ background: avatarColor(r.name) }}>{getInitials(r.name)}</div>
+                                                <div className="pd-rev-body">
+                                                    <div className="pd-rev-item-head">
+                                                        <span className="pd-rev-name">{r.name}</span>
+                                                        {r.role === 'admin' && <span className="pd-reply-badge-admin">Quản trị viên</span>}
+                                                        {r.rating ? <Stars rating={r.rating} size={13} /> : (
+                                                            <span style={{ fontSize: '0.75rem', color: '#9CA3AF', fontStyle: 'italic' }}>Bình luận</span>
+                                                        )}
+                                                        {r.verifiedPurchase && (
+                                                            <span className="pd-rev-verified"><CheckCircle size={12} style={IS} /> Đã mua hàng</span>
+                                                        )}
+                                                        <span className="pd-rev-date">{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+                                                    </div>
+                                                    <div className="pd-rev-comment">{r.comment}</div>
+                                                    <div className="pd-rev-actions">
+                                                        <button
+                                                            className={`pd-rev-action-btn${r.viewerFoundHelpful ? ' active' : ''}`}
+                                                            onClick={() => handleToggleHelpful(r._id)}>
+                                                            <ThumbsUp size={13} style={IS} /> Hữu ích {r.helpfulCount ? `(${r.helpfulCount})` : (r.helpfulUsers?.length ? `(${r.helpfulUsers.length})` : '')}
+                                                        </button>
+                                                        <button className="pd-rev-action-btn" onClick={() => { setReplyingTo(replyingTo === r._id ? null : r._id); setReplyText('') }}>
+                                                            <MessageSquare size={13} style={IS} /> Trả lời
+                                                        </button>
+                                                        <button className="pd-rev-action-btn">
+                                                            <Flag size={13} style={IS} /> Báo cáo sai phạm
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Form nhập câu trả lời cho bình luận gốc */}
+                                                    {replyingTo === r._id && (
+                                                        <div className="pd-reply-form">
+                                                            <input
+                                                                className="pd-reply-input"
+                                                                placeholder={isAuthenticated ? 'Viết câu trả lời...' : 'Đăng nhập để trả lời'}
+                                                                value={replyText}
+                                                                disabled={!isAuthenticated}
+                                                                onChange={e => setReplyText(e.target.value)}
+                                                                onKeyDown={e => { if (e.key === 'Enter') handleSubmitReply(r._id) }}
+                                                            />
+                                                            <button className="pd-reply-send" disabled={submittingReply}
+                                                                onClick={() => isAuthenticated ? handleSubmitReply(r._id) : navigate('/login')}>
+                                                                {submittingReply ? '...' : 'Gửi'}
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Danh sách câu trả lời của thread này */}
+                                                    {r.replies?.length > 0 && (
+                                                        <div className="pd-reply-list">
+                                                            {visibleReplies.map(rep => (
+                                                                <div key={rep._id} className="pd-reply-row">
+                                                                    <div className="pd-reply-avatar" style={{ background: avatarColor(rep.name) }}>{getInitials(rep.name)}</div>
+                                                                    <div className="pd-reply-body">
+                                                                        <div className="pd-reply-item-head">
+                                                                            <span className="pd-reply-name">{rep.name}</span>
+                                                                            {rep.role === 'admin' && <span className="pd-reply-badge-admin">Quản trị viên</span>}
+                                                                            {rep.replyToName && <span style={{ fontSize: '0.75rem', color: '#0057FF' }}>→ @{rep.replyToName}</span>}
+                                                                            <span className="pd-reply-date">{new Date(rep.createdAt).toLocaleDateString('vi-VN')}</span>
+                                                                        </div>
+                                                                        <div className="pd-reply-comment">{rep.comment}</div>
+                                                                        <button className="pd-reply-btn" style={{ marginTop: 4 }}
+                                                                            onClick={() => { setReplyingTo(replyingTo === rep._id ? null : rep._id); setReplyText('') }}>
+                                                                            <MessageSquare size={12} style={IS} /> Trả lời
+                                                                        </button>
+                                                                        {replyingTo === rep._id && (
+                                                                            <div className="pd-reply-form">
+                                                                                <input
+                                                                                    className="pd-reply-input"
+                                                                                    placeholder={isAuthenticated ? `Trả lời ${rep.name}...` : 'Đăng nhập để trả lời'}
+                                                                                    value={replyText}
+                                                                                    disabled={!isAuthenticated}
+                                                                                    onChange={e => setReplyText(e.target.value)}
+                                                                                    onKeyDown={e => { if (e.key === 'Enter') handleSubmitReply(rep._id) }}
+                                                                                />
+                                                                                <button className="pd-reply-send" disabled={submittingReply}
+                                                                                    onClick={() => isAuthenticated ? handleSubmitReply(rep._id) : navigate('/login')}>
+                                                                                    {submittingReply ? '...' : 'Gửi'}
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            {hiddenCount > 0 && (
+                                                                <button className="pd-show-more-btn" onClick={() => setExpandedThreads(s => ({ ...s, [r._id]: true }))}>
+                                                                    <ChevronRight size={14} style={IS} /> Xem thêm {hiddenCount} phản hồi
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="pd-rev-comment">{r.comment}</div>
-                                            <div className="pd-rev-actions">
-                                                <button
-                                                    className={`pd-rev-action-btn${r.viewerFoundHelpful ? ' active' : ''}`}
-                                                    onClick={() => handleToggleHelpful(r._id)}>
-                                                    <ThumbsUp size={13} style={IS} /> Hữu ích {r.helpfulCount ? `(${r.helpfulCount})` : (r.helpfulUsers?.length ? `(${r.helpfulUsers.length})` : '')}
-                                                </button>
-                                                <button className="pd-rev-action-btn">
-                                                    <Flag size={13} style={IS} /> Báo cáo sai phạm
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
+                                        )
+                                    })
                                 )}
                             </div>
                         )}

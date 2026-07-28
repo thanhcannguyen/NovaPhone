@@ -27,6 +27,7 @@ import Categories from './pages/admin/Categories'
 import AdminProducts from './pages/admin/Products'
 import Users from './pages/admin/Users'
 import AdminOrders from './pages/admin/Orders'
+import Reviews from './pages/admin/Reviews'
 
 // Route guards
 import UserRoute from './routes/UserRoute'
@@ -66,6 +67,7 @@ export default function App() {
                     <Route path='/admin/products' element={<AdminProducts />} />
                     <Route path='/admin/users' element={<Users />} />
                     <Route path='/admin/orders' element={<AdminOrders />} />
+                    <Route path='/admin/reviews' element={<Reviews />} />
                 </Route>
 
                 <Route path='*' element={<Navigate to='/products' />} />

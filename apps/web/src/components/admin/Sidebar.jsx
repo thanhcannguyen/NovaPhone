@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
     LayoutDashboard, Smartphone, FolderOpen,
-    ShoppingBag, Users, Globe, LogOut, Menu, X
+    ShoppingBag, Users, Globe, LogOut, Menu, X, MessageSquare
 } from 'lucide-react'
 
 const IS = { display: 'block', border: 'none', outline: 'none', background: 'none', boxShadow: 'none', flexShrink: 0 }
@@ -14,7 +14,8 @@ const NAV = [
     { path: '/admin/categories', label: 'Danh mục', icon: <FolderOpen size={17} style={IS} /> },
     { path: '/admin/orders', label: 'Đơn hàng', icon: <ShoppingBag size={17} style={IS} /> },
     { path: '/admin/users', label: 'Khách hàng', icon: <Users size={17} style={IS} /> },
-    { path: '/products', label: 'Xem website', icon: <Globe size={17} style={IS} />, external: true, section: 'Khác' },
+    { path: '/admin/reviews', label: 'Đánh giá', icon: <MessageSquare size={17} style={IS} /> },
+    { path: '/', label: 'Xem website', icon: <Globe size={17} style={IS} />, external: true, section: 'Khác' },
 ]
 
 export default function Sidebar() {
@@ -37,7 +38,7 @@ export default function Sidebar() {
         <>
             {/* Brand */}
             <div style={cs.brand}>
-                <a href="/products" target="_blank" style={cs.brandLink}>
+                <a href="/" target="_blank" style={cs.brandLink}>
                     Nova<span style={{ color: '#0057FF' }}>Phone</span>
                 </a>
                 <div style={cs.brandSub}>Admin Panel</div>
