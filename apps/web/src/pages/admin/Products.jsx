@@ -5,7 +5,7 @@ import { getAllProductsAdmin, createProduct, updateProduct } from '../../api/pro
 import { getCategories } from '../../api/categoryApi'
 
 const EMPTY_FORM = {
-    name: '', description: '', price: '', originalPrice: '', image: '', category: '', stock: '',
+    name: '', description: '', price: '', originalPrice: '', image: '', category: '', stock: '', isFeatured: false,
     specs: { brand: '', chip: '', ram: '', storage: '', screen: '', camera: '', battery: '', os: '' }
 }
 const ITEMS_PER_PAGE = 8
@@ -48,7 +48,7 @@ export default function AdminProducts() {
             name: p.name, description: p.description || '',
             price: p.price, originalPrice: p.originalPrice || '',
             image: p.image, category: p.category?._id || '',
-            stock: p.stock || 0,
+            stock: p.stock || 0, isFeatured: p.isFeatured || false,
             specs: {
                 brand: p.specs?.brand || '', chip: p.specs?.chip || '',
                 ram: p.specs?.ram || '', storage: p.specs?.storage || '',
@@ -60,7 +60,10 @@ export default function AdminProducts() {
         setPanelOpen(true)
     }
 
-    const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+    const handleChange = (e) => {
+        const { name, type, checked, value } = e.target
+        setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }))
+    }
     const handleSpecChange = (e) => setForm(f => ({ ...f, specs: { ...f.specs, [e.target.name]: e.target.value } }))
 
     const handleSubmit = async () => {
@@ -94,6 +97,16 @@ export default function AdminProducts() {
         try {
             await updateProduct(p._id, { isAvailable: !p.isAvailable })
             showMsg('success', p.isAvailable ? 'Đã ẩn sản phẩm' : 'Đã hiện sản phẩm')
+            loadData()
+        } catch {
+            showMsg('error', 'Lỗi cập nhật')
+        }
+    }
+
+    const handleToggleFeatured = async (p) => {
+        try {
+            await updateProduct(p._id, { isFeatured: !p.isFeatured })
+            showMsg('success', p.isFeatured ? 'Đã bỏ nổi bật' : 'Đã đánh dấu nổi bật')
             loadData()
         } catch {
             showMsg('error', 'Lỗi cập nhật')
@@ -519,6 +532,14 @@ export default function AdminProducts() {
                                         >
                                             {p.isAvailable ? '🙈' : '✅'}
                                         </button>
+                                        <button
+                                            title={p.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'}
+                                            className="ap-btn-edit"
+                                            style={{ color: p.isFeatured ? '#F59E0B' : '#9CA3AF' }}
+                                            onClick={() => handleToggleFeatured(p)}
+                                        >
+                                            {p.isFeatured ? '⭐' : '☆'}
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -575,6 +596,11 @@ export default function AdminProducts() {
                                 <Field label="URL ảnh chính *">
                                     <input className="admin-input" name="image" value={form.image} onChange={handleChange} placeholder="https://..." />
                                 </Field>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', fontWeight: 700, color: '#0A0A0A', cursor: 'pointer' }}>
+                                    <input type="checkbox" name="isFeatured" checked={form.isFeatured} onChange={handleChange}
+                                        style={{ width: 16, height: 16, accentColor: '#F59E0B' }} />
+                                    ⭐ Đánh dấu sản phẩm nổi bật (hiện ở trang chủ)
+                                </label>
                                 {form.image && (
                                     <img src={form.image} alt="preview"
                                         style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 8, border: '1px solid #E5E7EB', background: '#F8F9FB', padding: 4 }}

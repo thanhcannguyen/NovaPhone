@@ -5,11 +5,12 @@ import Category from '../models/category.model.js'
 // Query: category, brand, minPrice, maxPrice, search
 export const getProducts = async (req, res) => {
     try {
-        const { category, brand, minPrice, maxPrice, search } = req.query
+        const { category, brand, minPrice, maxPrice, search, featured } = req.query
 
         const filter = { isAvailable: true }
         if (category) filter.category = category
         if (brand) filter['specs.brand'] = { $regex: brand, $options: 'i' }
+        if (featured === 'true') filter.isFeatured = true
         if (minPrice || maxPrice) {
             filter.price = {}
             if (minPrice) filter.price.$gte = Number(minPrice)
@@ -54,7 +55,7 @@ export const getProductById = async (req, res) => {
 // POST /api/products — admin only
 export const createProduct = async (req, res) => {
     try {
-        const { name, description, price, originalPrice, image, images, category, specs, stock } = req.body
+        const { name, description, price, originalPrice, image, images, category, specs, stock, isFeatured } = req.body
 
         if (!name || !price || !image || !category) {
             return res.status(400).json({ message: 'Vui lòng điền đủ tên, giá, ảnh và danh mục' })
@@ -80,6 +81,7 @@ export const createProduct = async (req, res) => {
             category,
             specs: specs || {},
             stock: stock || 0,
+            isFeatured: isFeatured || false,
         })
 
         await product.populate('category', 'name')
@@ -98,7 +100,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params
-        const { name, description, price, originalPrice, image, images, category, specs, stock, isAvailable } = req.body
+        const { name, description, price, originalPrice, image, images, category, specs, stock, isAvailable, isFeatured } = req.body
 
         const product = await Product.findById(id)
         if (!product) return res.status(404).json({ message: 'Không tìm thấy sản phẩm' })
@@ -128,6 +130,7 @@ export const updateProduct = async (req, res) => {
         if (specs !== undefined) product.specs = { ...product.specs, ...specs }
         if (stock !== undefined) product.stock = stock
         if (isAvailable !== undefined) product.isAvailable = isAvailable
+        if (isFeatured !== undefined) product.isFeatured = isFeatured
 
         await product.save()
         await product.populate('category', 'name')

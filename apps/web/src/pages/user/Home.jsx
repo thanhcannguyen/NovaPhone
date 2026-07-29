@@ -71,12 +71,19 @@ export default function Home() {
             .finally(() => setLoading(false))
     }, [])
 
-    // Danh sách các thương hiệu
+    // Danh sách các thương hiệu — sắp xếp theo đúng thứ tự danh mục được tạo trước → sau
+    // (mảng `categories` đã fetch sẵn cho mục "Danh mục phổ biến"; category = tên hãng)
     const brands = useMemo(() => {
         const set = new Set()
         products.forEach(p => { if (p.specs?.brand) set.add(p.specs.brand) })
-        return Array.from(set)
-    }, [products])
+
+        const orderMap = new Map(categories.map((c, idx) => [c.name.trim().toLowerCase(), idx]))
+        return Array.from(set).sort((a, b) => {
+            const ia = orderMap.has(a.trim().toLowerCase()) ? orderMap.get(a.trim().toLowerCase()) : 999
+            const ib = orderMap.has(b.trim().toLowerCase()) ? orderMap.get(b.trim().toLowerCase()) : 999
+            return ia - ib
+        })
+    }, [products, categories])
 
     useEffect(() => {
         if (!activeBrand && brands.length > 0) setActiveBrand(brands[0])
@@ -92,10 +99,9 @@ export default function Home() {
             .finally(() => setBrandLoading(false))
     }, [activeBrand])
 
-    // Dữ liệu đã tối ưu tính toán
+    // Chỉ hiện sản phẩm admin tự đánh dấu nổi bật (⭐ trong trang quản lý sản phẩm)
     const featured = useMemo(() => {
-        const withDiscount = products.filter(p => p.originalPrice > p.price)
-        return (withDiscount.length >= 6 ? withDiscount : products).slice(0, 6)
+        return products.filter(p => p.isFeatured).slice(0, 8)
     }, [products])
 
     const countByCategory = useMemo(() => {
@@ -199,7 +205,9 @@ function FeaturedSection({ loading, products, onMore }) {
                 <div className="ps-sec-title">Top sản phẩm nổi bật</div>
                 <button className="ps-sec-more" onClick={onMore}>Xem thêm <ChevronRight size={16} /></button>
             </div>
-            {loading ? <Spinner /> : (
+            {loading ? <Spinner /> : products.length === 0 ? (
+                <div className="ps-empty-msg">Chưa có sản phẩm nào được đánh dấu nổi bật.</div>
+            ) : (
                 <div className="ps-feat-grid">
                     {products.map(p => <ProductCard key={p._id} product={p} />)}
                 </div>

@@ -59,6 +59,11 @@ const productSchema = new mongoose.Schema({
     isAvailable: {
         type: Boolean,
         default: true,
+    },
+    // Admin tự đánh dấu — quyết định sản phẩm nào hiện ở mục "Top sản phẩm nổi bật" trang chủ
+    isFeatured: {
+        type: Boolean,
+        default: false,
     }
 }, {
     timestamps: true
