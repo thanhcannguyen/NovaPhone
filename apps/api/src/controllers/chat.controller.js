@@ -1,8 +1,10 @@
-
 import Product from '../models/product.model.js'
 
-const GEMINI_MODEL = 'gemini-3.5-flash'
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
+// Model chính + model dự phòng — nếu model chính bị Google báo quá tải (503) sau khi
+// đã retry hết, tự động chuyển sang model kế tiếp trong danh sách thay vì báo lỗi cho user.
+// Thứ tự ưu tiên: 3.5-flash (nhanh, rẻ) -> 2.5-flash (ổn định, đã dùng lâu) -> 3.6-flash (mới nhất).
+const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-3.6-flash']
+const geminiApiUrl = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
 
 const MAX_MESSAGE_LENGTH = 1000
 const GEMINI_TIMEOUT_MS = 15000
@@ -61,15 +63,15 @@ async function executeSearchProducts(args = {}) {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-// Gọi Gemini API — dùng chung cho cả 2 lượt (lượt đầu + lượt sau khi có kết quả hàm)
-// Tự động thử lại tối đa 2 lần nếu Google báo model đang quá tải (503) — lỗi tạm thời,
-// không phải do code, thường tự hết sau vài giây.
-async function callGemini(contents, retriesLeft = 2) {
+// Gọi 1 model cụ thể, tự retry tối đa 2 lần với backoff (1.5s -> 3s) nếu bị 503/429.
+// Trả về null (thay vì throw) khi hết retry mà vẫn lỗi, để callGemini() ở dưới
+// có thể thử sang model dự phòng kế tiếp.
+async function callGeminiModel(model, contents, attempt = 0) {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS)
 
     try {
-        const res = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
+        const res = await fetch(`${geminiApiUrl(model)}?key=${process.env.GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
@@ -82,22 +84,64 @@ async function callGemini(contents, retriesLeft = 2) {
 
         if (!res.ok) {
             const errText = await res.text()
-            console.error('Gemini API lỗi:', res.status, errText)
+            console.error(`Gemini API lỗi [${model}]:`, res.status, errText)
 
             // 503 = model quá tải tạm thời, 429 = vượt quota/rate limit — cả 2 đáng để thử lại
-            if ((res.status === 503 || res.status === 429) && retriesLeft > 0) {
+            if ((res.status === 503 || res.status === 429) && attempt < 2) {
                 clearTimeout(timeout)
-                await sleep(1500)
-                return callGemini(contents, retriesLeft - 1)
+                await sleep(1500 * Math.pow(2, attempt)) // 1.5s, 3s
+                return callGeminiModel(model, contents, attempt + 1)
             }
 
-            throw new Error('GEMINI_ERROR')
+            return null
         }
 
         return await res.json()
+    } catch (err) {
+        console.error(`Gemini fetch lỗi [${model}]:`, err.message)
+        return null
     } finally {
         clearTimeout(timeout)
     }
+}
+
+// Gọi Gemini API — dùng chung cho cả 2 lượt (lượt đầu + lượt sau khi có kết quả hàm).
+// Thử lần lượt từng model trong GEMINI_MODELS (mỗi model đã tự retry riêng ở trên).
+// Nếu model chính đang quá tải diện rộng, chatbot vẫn trả lời được bằng model dự phòng
+// thay vì báo lỗi cho user — quan trọng cho demo/portfolio, tránh bị treo giữa chừng.
+async function callGemini(contents) {
+    for (const model of GEMINI_MODELS) {
+        const data = await callGeminiModel(model, contents)
+        if (data) return data
+    }
+    throw new Error('GEMINI_ERROR')
+}
+
+// Danh sách hãng để nhận diện nhanh trong tin nhắn khi cần trả lời "chế độ dự phòng"
+// (không dùng AI) — chỉ dùng để lọc thô, không thay thế được khả năng hiểu ngôn ngữ tự
+// nhiên của Gemini, nhưng đủ để đưa ra gợi ý sản phẩm thật thay vì im lặng/báo lỗi.
+const KNOWN_BRANDS = ['iphone', 'samsung', 'xiaomi', 'oppo', 'vivo', 'realme', 'apple']
+
+// "Chế độ dự phòng" — dùng khi TOÀN BỘ model AI (cả model chính lẫn dự phòng) đều
+// không phản hồi được (Google quá tải diện rộng, cực hiếm nhưng vẫn có thể xảy ra).
+// Thay vì trả lỗi giữa chừng cuộc trò chuyện, vẫn truy vấn dữ liệu thật từ MongoDB
+// và trả lời bằng template có sẵn — user luôn nhận được thông tin hữu ích, không bị
+// gián đoạn trải nghiệm, chỉ là câu trả lời "cứng" hơn AI một chút.
+async function buildDegradedReply(message) {
+    const lower = message.toLowerCase()
+    const brand = KNOWN_BRANDS.find(b => lower.includes(b))
+    const products = await executeSearchProducts(brand ? { brand: brand === 'iphone' ? 'apple' : brand } : {})
+
+    if (!products.length) {
+        return 'Dạ hiện bên em chưa tìm được sản phẩm phù hợp với yêu cầu này, bạn thử mô tả cụ thể hơn về hãng hoặc mức giá giúp shop nhé!'
+    }
+
+    const list = products
+        .slice(0, 3)
+        .map(p => `- ${p.name}: ${p.price.toLocaleString('vi-VN')}đ (RAM ${p.ram || 'đang cập nhật'}, bộ nhớ ${p.storage || 'đang cập nhật'})`)
+        .join('\n')
+
+    return `Dạ hệ thống tư vấn AI đang tạm thời quá tải, bên em xin gợi ý nhanh vài mẫu máy hiện có sẵn:\n${list}\n\nBạn muốn xem chi tiết mẫu nào không ạ?`
 }
 
 export const chatWithAI = async (req, res) => {
@@ -132,7 +176,12 @@ export const chatWithAI = async (req, res) => {
             try {
                 data = await callGemini(contents)
             } catch {
-                return res.status(502).json({ success: false, message: 'Dịch vụ tư vấn AI đang gặp sự cố, vui lòng thử lại sau' })
+                // Cả 3 model AI đều không phản hồi được — không báo lỗi giữa chừng,
+                // chuyển sang chế độ dự phòng (tìm sản phẩm thật từ DB, trả lời bằng template)
+                // để cuộc trò chuyện của user vẫn tiếp tục được, không bị gián đoạn.
+                console.error('Tất cả model Gemini đều lỗi, chuyển sang chế độ dự phòng (không dùng AI)')
+                const degradedReply = await buildDegradedReply(message)
+                return res.status(200).json({ success: true, reply: degradedReply, degraded: true })
             }
 
             const candidate = data.candidates?.[0]
