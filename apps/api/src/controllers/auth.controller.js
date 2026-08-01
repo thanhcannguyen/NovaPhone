@@ -42,12 +42,12 @@ export const register = async (req, res) => {
             emailOTPExpire: otpExpire,
         })
 
-        try {
-            await sendOtpEmail(email, otp)
-        } catch (mailErr) {
+        // Không "await" việc gửi email ở đây — trả response cho user ngay lập tức,
+        // để việc gửi email chạy nền phía sau. Nếu SMTP bị chặn/chậm (ví dụ do
+        // nền tảng hosting chặn cổng SMTP), user sẽ không bị treo màn hình "Đang đăng ký..."
+        sendOtpEmail(email, otp).catch((mailErr) => {
             console.error('Lỗi gửi email OTP:', mailErr)
-            // Tài khoản vẫn được tạo — không rollback, để người dùng bấm "Gửi lại mã" thử lại việc gửi email
-        }
+        })
 
         res.status(201).json({
             success: true,
@@ -114,7 +114,10 @@ export const resendOtp = async (req, res) => {
         user.emailOTPExpire = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000)
         await user.save()
 
-        await sendOtpEmail(email, otp)
+        // Không chặn response khi gửi lại mã — cùng lý do như ở register()
+        sendOtpEmail(email, otp).catch((mailErr) => {
+            console.error('Lỗi gửi lại email OTP:', mailErr)
+        })
 
         res.status(200).json({ success: true, message: 'Đã gửi lại mã xác thực, vui lòng kiểm tra email' })
     } catch (error) {
