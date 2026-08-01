@@ -58,13 +58,12 @@ function BannerSlider() {
 
 export default function ProductsPage() {
     const navigate = useNavigate()
-    const [searchParams] = useSearchParams()
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const [categories, setCategories] = useState([])
     const [products, setProducts] = useState([])
     const [selectedCategories, setSelectedCategories] = useState([]) // mảng rỗng = chưa lọc hãng nào = hiện tất cả
     const [selectedPriceRanges, setSelectedPriceRanges] = useState([]) // mảng rỗng = chưa lọc giá nào = hiện tất cả
-    const [search, setSearch] = useState('')
     const [loading, setLoading] = useState(true)
 
     const [shimmerAll, setShimmerAll] = useState(false)
@@ -81,7 +80,13 @@ export default function ProductsPage() {
         return () => window.removeEventListener('logoClick', handler)
     }, [])
 
-    useEffect(() => { setSearch(searchParams.get('search') || '') }, [searchParams])
+    // "search" giờ đọc thẳng từ URL — không dùng state riêng nữa, vì trước đây tách
+    // thành 2 effect (1 effect đồng bộ state từ URL + 1 effect gọi API theo state đó)
+    // gây ra race condition: lần mount đầu, effect gọi API chạy với state cũ (rỗng)
+    // trước khi state kịp đồng bộ, tạo ra 2 request chạy song song — nếu request
+    // "không lọc" phản hồi chậm hơn, nó ghi đè lên kết quả đã lọc đúng.
+    const search = searchParams.get('search') || ''
+
     useEffect(() => {
         const catId = searchParams.get('category')
         if (catId) setSelectedCategories([catId])
@@ -107,7 +112,10 @@ export default function ProductsPage() {
         setSelectedPriceRanges(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
     }
 
-    const clearAll = () => { setSelectedCategories([]); setSelectedPriceRanges([]); setSearch('') }
+    const clearAll = () => {
+        setSelectedCategories([]); setSelectedPriceRanges([])
+        setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('search'); return p })
+    }
     const hasFilter = selectedCategories.length > 0 || selectedPriceRanges.length > 0 || search !== ''
 
     // Lọc theo nhiều hãng (OR trong nhóm hãng) VÀ nhiều khoảng giá (OR trong nhóm giá)
@@ -320,7 +328,7 @@ export default function ProductsPage() {
                                 <span className="ps-filter-tag" onClick={clearAll}>✕ Xoá lọc</span>
                             )}
                             {search && (
-                                <span className="ps-filter-tag" onClick={() => setSearch('')}>🔍 {search} ✕</span>
+                                <span className="ps-filter-tag" onClick={() => setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('search'); return p })}>🔍 {search} ✕</span>
                             )}
                         </div>
                         <div className="ps-toolbar-right">
