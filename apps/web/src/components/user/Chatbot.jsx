@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react"
-import { sendChatMessage } from "../../api/chatApi"
-import { X, Send, Bot } from "lucide-react"
+import { useState, useRef, useEffect } from 'react'
+import { sendChatMessage } from '../../api/chatApi'
+import { X, Send, Bot } from 'lucide-react'
 
 // ẢNH ĐẠI DIỆN CHATBOT — TỰ THAY THẾ TẠI ĐÂY (tùy chọn)
 // Đặt file ảnh mascot của bạn vào: src/assets/chatbot/avatar.png (hoặc .jpg/.svg)
@@ -8,32 +8,32 @@ import { X, Send, Bot } from "lucide-react"
 // import botAvatar from '../../assets/chatbot/avatar.png'
 const botAvatar = null // đổi thành `botAvatar` (biến import ở trên) khi đã có file ảnh thật
 
-const BOT_NAME = "NovaBot"
-const WELCOME_MSG = "Xin chào! Mình là NovaBot 👋 Mình có thể tư vấn điện thoại phù hợp với nhu cầu của bạn. Bạn đang tìm dòng máy nào?"
-const TEASER_MSG = "Bạn cần hỗ trợ gì?"
+const BOT_NAME = 'NovaBot'
+const WELCOME_MSG = 'Xin chào! Mình là NovaBot 👋 Mình có thể tư vấn điện thoại phù hợp với nhu cầu của bạn. Bạn đang tìm dòng máy nào?'
+const TEASER_MSG = 'Bạn cần hỗ trợ gì?'
 const SUGGESTIONS = [
-    "So sánh iPhone và Samsung",
-    "Điện thoại tầm 5-10 triệu",
-    "Pin trâu, chụp ảnh đẹp",
+    'So sánh iPhone và Samsung',
+    'Điện thoại tầm 5-10 triệu',
+    'Pin trâu, chụp ảnh đẹp',
 ]
 
 function BotAvatar({ size }) {
     if (botAvatar) {
-        return <img src={botAvatar} alt={BOT_NAME} style={{ width: size, height: size, objectFit: "cover", borderRadius: "50%" }} />
+        return <img src={botAvatar} alt={BOT_NAME} style={{ width: size, height: size, objectFit: 'cover', borderRadius: '50%' }} />
     }
     return <Bot size={size * 0.55} />
 }
 
 export default function Chatbot() {
     const [isOpen, setIsOpen] = useState(false)
-    const [message, setMessage] = useState("")
+    const [message, setMessage] = useState('')
     const [loading, setLoading] = useState(false)
-    const [messages, setMessages] = useState([{ role: "assistant", content: WELCOME_MSG }])
+    const [messages, setMessages] = useState([{ role: 'assistant', content: WELCOME_MSG }])
     const scrollRef = useRef(null)
     const inputRef = useRef(null)
 
     useEffect(() => {
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
     }, [messages, loading])
 
     useEffect(() => {
@@ -44,17 +44,17 @@ export default function Chatbot() {
         const content = text.trim()
         if (!content || loading) return
 
-        setMessages(prev => [...prev, { role: "user", content }])
-        setMessage("")
+        setMessages(prev => [...prev, { role: 'user', content }])
+        setMessage('')
         setLoading(true)
 
         try {
             const data = await sendChatMessage(content, messages)
-            setMessages(prev => [...prev, { role: "assistant", content: data.reply || "Xin lỗi, tôi chưa có câu trả lời." }])
+            setMessages(prev => [...prev, { role: 'assistant', content: data.reply || 'Xin lỗi, tôi chưa có câu trả lời.' }])
         } catch (error) {
             console.error('Lỗi chatbot:', error)
-            const errMsg = error.response?.data?.message || "Có lỗi xảy ra khi kết nối AI chatbot, vui lòng thử lại."
-            setMessages(prev => [...prev, { role: "assistant", content: errMsg }])
+            const errMsg = error.response?.data?.message || 'Có lỗi xảy ra khi kết nối AI chatbot, vui lòng thử lại.'
+            setMessages(prev => [...prev, { role: 'assistant', content: errMsg }])
         } finally {
             setLoading(false)
         }
@@ -63,7 +63,7 @@ export default function Chatbot() {
     const handleSend = () => send(message)
 
     return (
-        <div className="cb-root">
+        <div className='cb-root'>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
                 .cb-root { position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: 'Nunito', sans-serif; }
@@ -144,68 +144,68 @@ export default function Chatbot() {
                 }
             `}</style>
 
-            <div className="cb-stack">
+            <div className='cb-stack'>
                 {isOpen ? (
-                    <div className="cb-panel">
-                        <div className="cb-header">
-                            <div className="cb-header-avatar"><BotAvatar size={40} /></div>
-                            <div className="cb-header-text">
-                                <div className="cb-header-name">{BOT_NAME}</div>
-                                <div className="cb-header-status"><span className="cb-header-dot" /> Đang hoạt động</div>
+                    <div className='cb-panel'>
+                        <div className='cb-header'>
+                            <div className='cb-header-avatar'><BotAvatar size={40} /></div>
+                            <div className='cb-header-text'>
+                                <div className='cb-header-name'>{BOT_NAME}</div>
+                                <div className='cb-header-status'><span className='cb-header-dot' /> Đang hoạt động</div>
                             </div>
-                            <button className="cb-header-close" onClick={() => setIsOpen(false)}><X size={16} /></button>
+                            <button className='cb-header-close' onClick={() => setIsOpen(false)}><X size={16} /></button>
                         </div>
 
-                        <div className="cb-body" ref={scrollRef}>
+                        <div className='cb-body' ref={scrollRef}>
                             {messages.map((msg, i) => (
                                 <div key={i} className={`cb-msg-row ${msg.role}`}>
-                                    {msg.role === "assistant" && <div className="cb-avatar"><BotAvatar size={36} /></div>}
-                                    <div className="cb-msg-col">
-                                        {msg.role === "assistant" && <span className="cb-msg-label">{BOT_NAME}</span>}
+                                    {msg.role === 'assistant' && <div className='cb-avatar'><BotAvatar size={36} /></div>}
+                                    <div className='cb-msg-col'>
+                                        {msg.role === 'assistant' && <span className='cb-msg-label'>{BOT_NAME}</span>}
                                         <div className={`cb-bubble ${msg.role}`}>{msg.content}</div>
                                     </div>
                                 </div>
                             ))}
                             {loading && (
-                                <div className="cb-msg-row assistant">
-                                    <div className="cb-avatar"><BotAvatar size={36} /></div>
-                                    <div className="cb-msg-col">
-                                        <span className="cb-msg-label">{BOT_NAME}</span>
-                                        <div className="cb-bubble assistant cb-typing"><span /><span /><span /></div>
+                                <div className='cb-msg-row assistant'>
+                                    <div className='cb-avatar'><BotAvatar size={36} /></div>
+                                    <div className='cb-msg-col'>
+                                        <span className='cb-msg-label'>{BOT_NAME}</span>
+                                        <div className='cb-bubble assistant cb-typing'><span /><span /><span /></div>
                                     </div>
                                 </div>
                             )}
                         </div>
 
                         {messages.length === 1 && (
-                            <div className="cb-suggestions">
+                            <div className='cb-suggestions'>
                                 {SUGGESTIONS.map(s => (
-                                    <button key={s} className="cb-suggestion-btn" onClick={() => send(s)}>{s}</button>
+                                    <button key={s} className='cb-suggestion-btn' onClick={() => send(s)}>{s}</button>
                                 ))}
                             </div>
                         )}
 
-                        <div className="cb-input-row">
+                        <div className='cb-input-row'>
                             <input
                                 ref={inputRef}
-                                className="cb-input"
-                                type="text"
+                                className='cb-input'
+                                type='text'
                                 value={message}
-                                placeholder="Nhập câu hỏi..."
+                                placeholder='Nhập câu hỏi...'
                                 disabled={loading}
                                 onChange={e => setMessage(e.target.value)}
-                                onKeyDown={e => { if (e.key === "Enter") handleSend() }}
+                                onKeyDown={e => { if (e.key === 'Enter') handleSend() }}
                             />
-                            <button className="cb-send-btn" onClick={handleSend} disabled={loading || !message.trim()}>
+                            <button className='cb-send-btn' onClick={handleSend} disabled={loading || !message.trim()}>
                                 <Send size={17} />
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <div className="cb-teaser" onClick={() => setIsOpen(true)}>{TEASER_MSG}</div>
+                    <div className='cb-teaser' onClick={() => setIsOpen(true)}>{TEASER_MSG}</div>
                 )}
 
-                <button className="cb-toggle" onClick={() => setIsOpen(o => !o)}>
+                <button className='cb-toggle' onClick={() => setIsOpen(o => !o)}>
                     <BotAvatar size={62} />
                 </button>
             </div>
