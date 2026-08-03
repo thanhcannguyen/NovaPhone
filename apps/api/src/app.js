@@ -17,7 +17,6 @@ import orderRoute from './routes/order.route.js'
 import reviewRoute from './routes/review.route.js'
 import reviewActionRoute from './routes/reviewAction.route.js'
 import chatRoute from './routes/chat.route.js'
-import aiRoute from './routes/ai.route.js'
 
 const app = express()
 app.use(cors())
@@ -49,7 +48,6 @@ app.use('/api/orders', orderRoute)
 app.use('/api/products/:productId/reviews', reviewRoute)
 app.use('/api/reviews', reviewActionRoute)
 app.use('/api/chat', chatRoute)
-app.use('/api/ai', aiRoute)
 
 app.use((req, res) => {
     res.status(404).json({ message: `Route không tìm thấy: ${req.originalUrl}` })
