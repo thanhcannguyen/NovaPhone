@@ -1,0 +1,232 @@
+/* Tách từ khối <style> nhúng trong admin/Products.jsx (không đổi giá trị CSS,
+   chỉ đổi tên class sang camelCase để gọi qua styles.xxx với CSS Modules) */
+
+.toolbar {
+    display: flex; gap: 10px;
+    margin-bottom: 16px; align-items: stretch; flex-wrap: nowrap;
+}
+.search {
+    flex: 1; min-width: 0;
+    background: #fff; border: 1.5px solid #E5E7EB;
+    border-radius: 10px; padding: 9px 12px 9px 36px;
+    font-size: 0.85rem; font-family: 'Nunito',sans-serif;
+    color: #0A0A0A; outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+}
+.search:focus { border-color: #0057FF; }
+.searchWrap { position: relative; flex: 1; min-width: 0; }
+.searchIcon {
+    position: absolute; left: 11px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px; pointer-events: none; color: #9CA3AF;
+}
+.select {
+    background: #fff; border: 1.5px solid #E5E7EB;
+    border-radius: 10px; padding: 9px 10px;
+    font-size: 0.82rem; font-family: 'Nunito',sans-serif;
+    outline: none; cursor: pointer; color: #0A0A0A;
+    max-width: 140px; width: 140px; flex-shrink: 0;
+}
+.select:focus { border-color: #0057FF; }
+
+/* Custom dropdown */
+.drop { position: relative; flex-shrink: 0; }
+.dropBtn {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; width: 140px;
+    background: #fff; border: 1.5px solid #E5E7EB;
+    border-radius: 10px; padding: 9px 12px;
+    font-size: 0.82rem; font-family: 'Nunito',sans-serif;
+    font-weight: 600; color: #0A0A0A;
+    cursor: pointer; outline: none; text-align: left;
+    transition: border-color 0.2s;
+}
+.dropBtn.open { border-color: #0057FF; }
+.dropArrow { font-size: 10px; color: #6B7280; flex-shrink: 0; transition: transform 0.2s; }
+.dropBtn.open .dropArrow { transform: rotate(180deg); }
+.dropMenu {
+    position: absolute; top: calc(100% + 6px); left: 0;
+    background: #fff; border: 1px solid #E5E7EB;
+    border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    z-index: 999; min-width: 100%; width: max-content; max-width: 200px;
+    overflow: hidden;
+    animation: dropFade 0.15s ease;
+}
+@keyframes dropFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.dropItem {
+    display: block; width: 100%;
+    padding: 9px 14px; text-align: left;
+    font-size: 0.85rem; font-family: 'Nunito',sans-serif;
+    font-weight: 500; color: #0A0A0A;
+    background: none; border: none; cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+}
+.dropItem:hover { background: #F8F9FB; }
+.dropItem.active { background: #EEF4FF; color: #0057FF; font-weight: 700; }
+.addBtn {
+    background: #0057FF; color: #fff; border: none;
+    border-radius: 10px; padding: 9px 14px;
+    font-size: 0.82rem; font-weight: 700;
+    font-family: 'Nunito',sans-serif; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
+    transition: background 0.2s;
+}
+.addBtn:hover { background: #0040CC; }
+
+/* ── Desktop Table ── */
+.tableWrap { display: block; }
+.table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'Nunito',sans-serif;
+}
+.table th {
+    padding: 10px 14px; text-align: left;
+    font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #6B7280; background: #F8F9FB;
+    border-bottom: 1px solid #E5E7EB; white-space: nowrap;
+}
+.table td {
+    padding: 11px 14px; font-size: 0.83rem;
+    border-bottom: 1px solid #F9FAFB; vertical-align: middle;
+    color: #0A0A0A;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #FAFAFA; }
+
+/* ── Mobile Card List ── */
+.cardList { display: none; flex-direction: column; gap: 10px; }
+.card {
+    background: #fff; border: 1px solid #E5E7EB;
+    border-radius: 12px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+}
+.cardImg {
+    width: 54px; height: 54px; border-radius: 8px;
+    object-fit: contain; background: #F8F9FB;
+    border: 1px solid #E5E7EB; padding: 4px;
+    flex-shrink: 0;
+}
+.cardBody { flex: 1; min-width: 0; }
+.cardName {
+    font-size: 0.85rem; font-weight: 700;
+    color: #0A0A0A; margin-bottom: 3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cardMeta {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    align-items: center; margin-bottom: 4px;
+}
+.cardBrand {
+    font-size: 0.7rem; font-weight: 700;
+    background: #EEF4FF; color: #0040CC;
+    padding: 2px 7px; border-radius: 4px;
+}
+.cardPrice {
+    font-size: 0.85rem; font-weight: 800; color: #0057FF;
+}
+.cardRow2 {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-top: 6px;
+}
+.cardStock { font-size: 0.75rem; color: #6B7280; }
+.cardBadge {
+    font-size: 0.7rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; border: 1px solid;
+}
+.cardActions { display: flex; gap: 6px; flex-shrink: 0; }
+.btnEdit {
+    background: #EEF4FF; color: #0057FF;
+    border: none; border-radius: 7px;
+    padding: 6px 10px; font-size: 0.75rem; font-weight: 700;
+    font-family: 'Nunito',sans-serif; cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; gap: 4px;
+}
+.btnEdit:hover { background: #0057FF; color: #fff; }
+.btnToggle {
+    background: #FEF2F2; color: #EF4444;
+    border: none; border-radius: 7px;
+    padding: 6px 10px; font-size: 0.75rem; font-weight: 700;
+    font-family: 'Nunito',sans-serif; cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; gap: 4px;
+}
+.btnToggle:hover { background: #EF4444; color: #fff; }
+.btnToggle.show { background: #F0FDF4; color: #15803D; }
+.btnToggle.show:hover { background: #15803D; color: #fff; }
+
+/* Shared buttons in table */
+.adminBtnEdit {
+    background: #EEF4FF; color: #0057FF; border: none;
+    border-radius: 7px; padding: 6px 11px; font-size: 0.78rem;
+    font-weight: 700; font-family: 'Nunito',sans-serif;
+    cursor: pointer; margin-right: 4px; transition: all 0.2s;
+}
+.adminBtnEdit:hover { background: #0057FF; color: #fff; }
+.adminBtnDel {
+    background: #FEF2F2; color: #EF4444; border: none;
+    border-radius: 7px; padding: 6px 11px; font-size: 0.78rem;
+    font-weight: 700; font-family: 'Nunito',sans-serif;
+    cursor: pointer; transition: all 0.2s;
+}
+.adminBtnDel:hover { background: #EF4444; color: #fff; }
+
+/* Status badge */
+.badgeActive {
+    background: #F0FDF4; color: #15803D;
+    border: 1px solid #BBF7D0;
+    font-size: 0.72rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px;
+}
+.badgeHidden {
+    background: #F8F9FB; color: #9CA3AF;
+    border: 1px solid #E5E7EB;
+    font-size: 0.72rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px;
+}
+
+/* Form panel */
+.adminInput {
+    width: 100%; background: #F8F9FB;
+    border: 1.5px solid #E5E7EB; border-radius: 10px;
+    padding: 10px 14px; font-size: 0.875rem;
+    font-family: 'Nunito',sans-serif; color: #0A0A0A;
+    outline: none; transition: border-color 0.2s;
+}
+.adminInput:focus { border-color: #0057FF; background: #fff; }
+.adminBtnPrimary {
+    background: #0057FF; color: #fff; border: none;
+    border-radius: 10px; padding: 10px 20px;
+    font-size: 0.875rem; font-weight: 700;
+    font-family: 'Nunito',sans-serif; cursor: pointer;
+    transition: background 0.2s; margin-right: 8px;
+    white-space: nowrap;
+}
+.adminBtnPrimary:hover { background: #0040CC; }
+.adminBtnPrimary:disabled { opacity: 0.7; cursor: default; }
+.adminBtnSecondary {
+    background: #fff; color: #6B7280;
+    border: 1.5px solid #E5E7EB; border-radius: 10px;
+    padding: 9px 16px; font-size: 0.875rem; font-weight: 600;
+    font-family: 'Nunito',sans-serif; cursor: pointer; transition: all 0.2s;
+}
+.adminBtnSecondary:hover { border-color: #0057FF; color: #0057FF; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .tableWrap { display: none !important; }
+    .cardList  { display: flex !important; }
+    .toolbar { flex-wrap: wrap; }
+    .searchWrap { flex: 1; min-width: calc(100% - 150px); }
+    .select { width: 140px; max-width: 140px; }
+    .addBtn { width: 100%; justify-content: center; text-align: center; }
+}
+@media (max-width: 400px) {
+    .toolbar { flex-wrap: wrap; }
+    .searchWrap { width: 100%; flex: none; }
+    .select { width: 100%; max-width: none; flex: none; }
+}
