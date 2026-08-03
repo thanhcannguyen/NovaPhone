@@ -33,3 +33,6 @@ mongodb_data/
 # Temporary files
 *.tmp
 *.temp
+
+# Docs
+docs/ON_TAP.md
