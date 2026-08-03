@@ -29,6 +29,10 @@ app.use('/api/stripe', stripeRoute)
 
 app.use(express.json())
 
+// Route health check nhẹ, không đụng tới DB — dùng để "ping" giữ server free tier
+// (Render) không bị ngủ sau 15 phút không hoạt động
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }))
+
 
 
 // ...
